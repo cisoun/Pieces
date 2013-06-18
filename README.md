@@ -1,6 +1,8 @@
 Pieces
 ======
 
+![alt text](https://raw.github.com/cisoun/pieces/master/screenshot.png)
+
 Description
 -----------
 Othello programmed in Java as project for school.
@@ -22,5 +24,5 @@ Tools used
 
 Contributors
 ------------
-Cyriaque Skrapits : main developer
-Simon Guillaume-Gentil : AI
+Cyriaque Skrapits (main developer)<br/>
+Simon Guillaume-Gentil (AI)
