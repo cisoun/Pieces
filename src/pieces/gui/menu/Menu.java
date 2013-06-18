@@ -16,6 +16,7 @@ import pieces.gui.utils.Couleur;
 import pieces.gui.utils.Themes;
 
 
+
 public class Menu extends JPanel {
 	private static final long serialVersionUID = 1L;
 

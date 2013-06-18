@@ -19,6 +19,7 @@ import pieces.gui.utils.Bank.SequenceIntrouvableException;
 import pieces.utils.Config;
 import pieces.utils.Matrix.MatrixPiece;
 
+
 public class GUI extends JFrame {
 
 	private Game reversi;

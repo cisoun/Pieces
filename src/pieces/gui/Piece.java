@@ -21,6 +21,7 @@ import pieces.gui.utils.Bank;
 import pieces.utils.Coords;
 
 
+
 public class Piece extends JPanel {
 	private static final long serialVersionUID = 6120781714260705968L;
 	private int tailleSprite;

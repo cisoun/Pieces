@@ -20,6 +20,7 @@ import pieces.gui.utils.Themes;
 import pieces.utils.Matrix.MatrixPiece;
 
 
+
 public class Scores extends JPanel {
 	private Game reversi;
 	private Bank banque;

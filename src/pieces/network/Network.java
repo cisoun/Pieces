@@ -12,6 +12,7 @@ import pieces.Game;
 import pieces.utils.Config;
 
 
+
 public class Network {
 	public static final int DEFAULT_PORT = 9001;
 	public static final String DEFAULT_SERVER = "127.0.0.1";

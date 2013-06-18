@@ -27,6 +27,7 @@ import pieces.gui.utils.Themes;
 import pieces.gui.utils.Bank.SequenceIntrouvableException;
 import pieces.utils.Config;
 
+
 public class Options extends JPanel {
 
 	private final Font POLICE = new Font(Font.SANS_SERIF, Font.PLAIN, 11);

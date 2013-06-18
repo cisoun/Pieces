@@ -14,6 +14,7 @@ import pieces.utils.Matrix;
 import pieces.utils.Player;
 import pieces.utils.Matrix.MatrixPiece;
 
+
 public class Game extends UnicastRemoteObject implements IClient {
 	private static final long serialVersionUID = 1L;
 	public static final String APP_NAME = "Pieces";

@@ -13,6 +13,7 @@ import pieces.gui.utils.Couleur;
 import pieces.gui.utils.Themes;
 
 
+
 public class MenuBar extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private boolean flat;

@@ -18,6 +18,7 @@ import pieces.network.Network;
 import pieces.utils.Config;
 
 
+
 public class Multiplayer extends MenuBar {
 	private Game reversi;
 

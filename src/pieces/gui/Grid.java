@@ -18,6 +18,7 @@ import pieces.utils.Config;
 import pieces.utils.Coords;
 import pieces.utils.Matrix.MatrixPiece;
 
+
 public class Grid extends JPanel {
 	private static final long serialVersionUID = 1L;
 
