@@ -10,7 +10,7 @@ import java.awt.RenderingHints;
 import java.util.LinkedList;
 import javax.swing.JPanel;
 
-import pieces.gui.utils.Couleur;
+import pieces.gui.utils.ColorTools;
 import pieces.gui.utils.Ease;
 
 
@@ -24,10 +24,10 @@ import pieces.gui.utils.Ease;
 public class Message extends JPanel {
 	private static final long serialVersionUID = 1L;
 
-	public static final Color ATTENTION = new Color(255, 214, 51);
-	public static final Color ERREUR = new Color(255, 92, 51);
+	public static final Color WARNING = new Color(255, 214, 51);
+	public static final Color ERROR = new Color(255, 92, 51);
 	public static final Color OK = new Color(153, 204, 51);
-	public static final Color NEUTRE = new Color(51, 173, 255);
+	public static final Color NORMAL = new Color(51, 173, 255);
 
 	private GUI parent;
 	private String texte;
@@ -47,7 +47,7 @@ public class Message extends JPanel {
 	public Message(GUI parent) {
 		this.parent = parent;
 		this.texte = "";
-		this.couleur = NEUTRE;
+		this.couleur = NORMAL;
 
 		liste = new LinkedList<MessageStruct>();
 
@@ -147,7 +147,7 @@ public class Message extends JPanel {
 		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
 		// Fond.
-		GradientPaint gp = new GradientPaint(0, 0, m.couleur, 0, getHeight(), Couleur.assombrir(m.couleur, 20));
+		GradientPaint gp = new GradientPaint(0, 0, m.couleur, 0, getHeight(), ColorTools.darken(m.couleur, 20));
 		g2d.setPaint(gp);
 		g2d.fillRect(0, marge, getWidth(), getHeight());
 
@@ -162,10 +162,10 @@ public class Message extends JPanel {
 		FontMetrics fm = getFontMetrics(getFont());
 		int x = getWidth() / 2 - fm.stringWidth(m.texte) / 2;
 
-		g2d.setColor(Couleur.eclaircir(m.couleur, 40));
+		g2d.setColor(ColorTools.brighten(m.couleur, 40));
 		g2d.drawString(m.texte, x, marge + getHeight() - 6);
 
-		g2d.setColor(Couleur.assombrir(m.couleur, 150));
+		g2d.setColor(ColorTools.darken(m.couleur, 150));
 		g2d.drawString(m.texte, x, marge + getHeight() - 7);
 
 		g2d.dispose();

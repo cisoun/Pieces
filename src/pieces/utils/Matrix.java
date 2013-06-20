@@ -11,132 +11,124 @@ import java.util.Stack;
 public class Matrix {
 
 	public static class MatrixPiece {
-		public static final int VIDE = 0;
-		public static final int NOIR = 1;
-		public static final int BLANC = 2;
-
+		public static final int EMPTY = 0;
+		public static final int BLACK = 1;
+		public static final int WHITE = 2;
+		
 		public static String toChar(int piece) {
-			return piece == VIDE ? "_" : (piece == NOIR ? "#" : "O");
+			return piece == EMPTY ? "_" : (piece == BLACK ? "#" : "O");
 		}
 	}
 
-	private static final int BAS = 1;
-	private static final int DROITE = 1;
-	private static final int GAUCHE = -1;
-	private static final int HAUT = -1;
+	private static final int DOWN = 1;
+	private static final int RIGHT = 1;
+	private static final int LEFT = -1;
+	private static final int UP = -1;
 
-	private int[] matrice;
-	private int rangee;
+	private int[] matrix;
+	private int range;
+	private int maxPieces;
 	private int pieces;
-	private int piecesNoires;
-	private int piecesBlanches;
-	public Stack<Integer> coupsPossibles;
+	public Stack<Integer> movesAvailable;
 
 	public Matrix(int dimension) {
-		rangee = dimension;
-		pieces = rangee * rangee;
-		matrice = new int[pieces];
-		coupsPossibles = new Stack<Integer>();
-		piecesNoires = 0;
-		piecesBlanches = 0;
+		range = dimension;
+		maxPieces = range * range;
+		matrix = new int[maxPieces];
+		movesAvailable = new Stack<Integer>();
 	}
 
-	public void chercherMouvements(int typePiece) {
-		coupsPossibles.clear();
-	
-		// Recherche de coups possibles pour chaque case.
-		for (int i = 0; i < pieces; i++) {
-			// Ignore les pièces déjà posées ou cases trouvées.
-			if (get(i) != MatrixPiece.VIDE || coupsPossibles.contains(i))
+	public void searchMoves(int pieceType) {
+		movesAvailable.clear();
+
+		// Analyze each case.
+		for (int i = 0; i < maxPieces; i++) {
+			// Ignore used or already found cases.
+			if (get(i) != MatrixPiece.EMPTY || movesAvailable.contains(i))
 				continue;
-			// Pour toutes les directions...
-			for (int dH = HAUT; dH <= BAS; dH++) {
-				for (int dV = GAUCHE; dV <= DROITE; dV++) {
-					// Position de la pièce analysée.
+			// For all directions...
+			for (int dH = UP; dH <= DOWN; dH++) {
+				for (int dV = LEFT; dV <= RIGHT; dV++) {
+					// Current piece's position.
 					int x = getX(i);
 					int y = getY(i);
-	
-					// Calcul du nombre de pièces dans la trajectoire jusqu'au
-					// bord.
-					int piecesHorizontale = dH == GAUCHE ? x + 1 : rangee - x;
-					int piecesVerticales = dV == HAUT ? y + 1 : rangee - y;
-					int pieces = nombrePieces(dH, dV, piecesHorizontale, piecesVerticales);
-	
-					// Vérifie dans la rangée où se trouve la pièce voisine.
+
+					// Compute numbers of cases between current case and border.
+					int horizontalPieces = dH == LEFT ? x + 1 : range - x;
+					int vertialPieces = dV == UP ? y + 1 : range - y;
+					int pieces = numberOfPieces(dH, dV, horizontalPieces, vertialPieces);
+
+					// Check in the range where the neighboring piece is at.
 					boolean ok = false;
 					for (int j = 1; j < pieces; j++) {
-						int mx = x + (dH * j); // Position X courante.
-						int my = y + (dV * j); // Position Y courante.
-	
-						// Pièce courante.
-						int voisine = getIndex(mx, my);
-						int typeVoisine = get(voisine);
-	
-						// Si la première case rencontrée de la rangée est vide
-						// ou est la même alors pas de mouvement possible.
-						if (j == 1 && (typeVoisine == MatrixPiece.VIDE || typeVoisine == typePiece))
+						int mx = x + (dH * j); // Current X pos.
+						int my = y + (dV * j); // Current Y pos.
+
+						// Current piece.
+						int neighbor = getIndex(mx, my);
+						int neighborType = get(neighbor);
+
+						// If first found case is empty or its piece is the same
+						// , no moves possible.
+						if (j == 1 && (neighborType == MatrixPiece.EMPTY || neighborType == pieceType))
 							break;
-						
-						if (ok && typeVoisine == MatrixPiece.VIDE)
+
+						if (ok && neighborType == MatrixPiece.EMPTY)
 							break;
-	
-						// Si la première pièce a été passée et qu'une similaire
-						// a été trouvé, la stocker.
-						if (typeVoisine == typePiece) {
-							if (ok)
-							{
-								System.out.println("Valide en " + Coords.toString(x, y));
-								if (!coupsPossibles.contains(i))
-								coupsPossibles.push(i);
+
+						// If first piece was already seen and a same one was
+						// found, save the last one.
+						if (neighborType == pieceType) {
+							if (ok) {
+								System.out.println("Available at " + Coords.toString(x, y));
+								if (!movesAvailable.contains(i))
+									movesAvailable.push(i);
 								ok = false;
 							} else {
 								continue;
 							}
 						}
-	
-						
-						if (typeVoisine != MatrixPiece.VIDE && typeVoisine != typePiece)
+
+						if (neighborType != MatrixPiece.EMPTY && neighborType != pieceType)
 							ok = true;
-	
+
 					}
 				}
 			}
 		}
-		System.out.println("---");
 	}
 
 	/**
-	 * Analyse une certaine rangée depuis une pièce.
+	 * Analyze a row from a piece.
 	 * 
-	 * Si dans cette rangée on trouve la même pièce sans qu'il y ait de cases
-	 * vides entre ces deux, on suppose que c'est la pièce voisine de celle
-	 * d'origine.
+	 * If we found the same piece in this row without any empty case between the
+	 * original and the last found, we suppose it's its neighbor.
 	 * 
-	 * @param x Position X de la pièce d'origine.
-	 * @param y Position Y de la pièce d'origine.
-	 * @param directionHorizontale Traiter à gauche ou à droite.
-	 * @param directionVerticale Traiter en haut ou en bas.
-	 * @return Pièce voisine.
+	 * @param x Original piece's X position.
+	 * @param y Original piece's Y position.
+	 * @param horizontalDirection
+	 * @param verticalDirection
+	 * @return Neighboring piece.
 	 */
-	public int chercherVoisine(int piece, int directionHorizontale, int directionVerticale) {
-		// Calcul du nombre de pièces dans la diagonale jusqu'au bord.
+	public int searchNeighbor(int piece, int horizontalDirection, int verticalDirection) {
+		// Compute number of pieces between the current piece to the border.
 		int x = getX(piece);
 		int y = getY(piece);
-		int piecesHorizontale = directionHorizontale == GAUCHE ? x : rangee - x - 1;
-		int piecesVerticales = directionVerticale == HAUT ? y : rangee - y - 1;
-		int pieces = nombrePieces(directionHorizontale, directionVerticale, piecesHorizontale, piecesVerticales);
-	
-		int cote = get(piece);
-	
-		// Vérifie dans la rangée où se trouve la pièce voisine.
+		int horizontalPieces = horizontalDirection == LEFT ? x : range - x - 1;
+		int verticalPieces = verticalDirection == UP ? y : range - y - 1;
+		int pieces = numberOfPieces(horizontalDirection, verticalDirection, horizontalPieces, verticalPieces);
+
+		int type = get(piece);
+
+		// Check in the row where is its neighbor.
 		for (int i = 1; i <= pieces; i++) {
-			int voisine = getIndex(x + (directionHorizontale * i), y + (directionVerticale * i));
-			// Case vide... Pas de voisine.
-			if (get(voisine) == MatrixPiece.VIDE)
+			int neighbor = getIndex(x + (horizontalDirection * i), y + (verticalDirection * i));
+			// Empty case, no neighbor.
+			if (get(neighbor) == MatrixPiece.EMPTY)
 				return -1;
-			// Voisine trouvée !
-			if (get(voisine) == cote) {
-				return voisine;
+			// Neighbor found !
+			if (get(neighbor) == type) {
+				return neighbor;
 			}
 		}
 		return -1;
@@ -145,20 +137,21 @@ public class Matrix {
 	private int distance(int a, int b) {
 		int dX = Math.abs(getX(a) - getX(b));
 		int dY = Math.abs(getY(a) - getY(b));
-	
+
 		if (dX == dY || dY == 0)
 			return dX - 1;
 		else
 			return dY - 1;
 	}
 
-	public void initialiser() {
-		for (int i = 0; i < pieces; i++)
-			matrice[i] = MatrixPiece.VIDE;
+	public void initialize() {
+		pieces = 0;
+		for (int i = 0; i < maxPieces; i++)
+			matrix[i] = MatrixPiece.EMPTY;
 	}
-
+	
 	public int get(int piece) {
-		return matrice[piece];
+		return matrix[piece];
 	}
 
 	public int get(int x, int y) {
@@ -166,7 +159,7 @@ public class Matrix {
 	}
 
 	public int getIndex(int x, int y) {
-		return getIndex(x, y, rangee);
+		return getIndex(x, y, range);
 	}
 
 	public static int getIndex(int x, int y, int rangee) {
@@ -174,121 +167,126 @@ public class Matrix {
 	}
 
 	public int getX(int piece) {
-		return piece % rangee;
+		return piece % range;
 	}
 
 	public int getY(int piece) {
-		return piece / rangee;
+		return piece / range;
+	}
+	
+	public boolean isFull()
+	{
+		return pieces == maxPieces;
 	}
 
 	/**
-	 * Retourne le nombre de pièce se trouvant entre une pièce d'origine et une
-	 * pièce voisine.
+	 * Return the number of pieces between one and another.
 	 * 
-	 * @param directionHorizontale Traiter à gauche ou à droite.
-	 * @param directionVerticale Traiter en haut ou en bas.
-	 * @param piecesHorizontales Nombre de pièces sur l'axe horizontal.
-	 * @param piecesVerticales Nombre de pièces sur l'axe vertical.
-	 * @return Nombre de pièces entre deux pièces.
+	 * @param horizontalDirection
+	 * @param verticalDirection
+	 * @param horizontalPieces Number of pieces on the X axis.
+	 * @param verticalPieces Number of pieces on the Y axis.
+	 * @return Number of pieces.
 	 */
-	public static int nombrePieces(int directionHorizontale, int directionVerticale, int piecesHorizontales, int piecesVerticales) {
+	public static int numberOfPieces(int horizontalDirection, int verticalDirection, int horizontalPieces, int verticalPieces) {
 		int pieces;
-		if (directionHorizontale == 0) {
-			pieces = piecesVerticales;
-		} else if (directionVerticale == 0) {
-			pieces = piecesHorizontales;
+		if (horizontalDirection == 0) {
+			pieces = verticalPieces;
+		} else if (verticalDirection == 0) {
+			pieces = horizontalPieces;
 		} else {
-			pieces = piecesHorizontales >= piecesVerticales ? piecesVerticales : piecesHorizontales;
+			pieces = horizontalPieces >= verticalPieces ? verticalPieces : horizontalPieces;
 		}
 		return pieces;
 	}
 
 	public void set(int piece, int type) {
-		matrice[piece] = type;
+		matrix[piece] = type;
 	}
 
 	public void set(int x, int y, int type) {
 		set(getIndex(x, y), type);
 	}
 
-	public void poser(int piece, int type) {
+	public int pieces()
+	{
+		return maxPieces - score(MatrixPiece.EMPTY);
+	}
+	
+	public void play(int piece, int type) {
 		set(piece, type);
-		traiterToutesRangees(piece);
+		processAllRanges(piece);
 		System.out.println(toString());
 	}
 
 	public void poser(int x, int y, int type) {
-		poser(getIndex(x, y), type);
+		play(getIndex(x, y), type);
 	}
 
-	public void reinitialiser() {
-		initialiser();
+	public void reset() {
+		initialize();
 	}
 
-	public void retourner(int piece) {
-		if (get(piece) == MatrixPiece.VIDE)
+	public void reverse(int piece) {
+		if (get(piece) == MatrixPiece.EMPTY)
 			return;
 
 		int type = 2 - (get(piece) - 1); // Passage de 1 à 2 et de 2 à 1.
 		set(piece, type);
 	}
 
-	public void retourner(int x, int y) {
-		retourner(getIndex(x, y));
+	public void reverse(int x, int y) {
+		reverse(getIndex(x, y));
 	}
-	
-	public int score(int type)
-	{
+
+	public int score(int type) {
 		int x = 0;
-		for (int i = 0; i < matrice.length; i++)
+		for (int i = 0; i < matrix.length; i++)
 			if (get(i) == type)
 				x++;
 		return x;
 	}
 
 	/**
-	 * Vérifie si une pièce possède une pièce voisine dans une certaine rangée
+	 * Check if a piece has a neighbor in the same range and if so, reverse
+	 * every pieces between them.
 	 * 
-	 * Si c'est le cas, retourne toutes les pièces contraires se trouvant entre
-	 * les deux.
-	 * 
-	 * @param x Position X de la pièce d'origine.
-	 * @param y Position Y de la pièce traitée.
-	 * @param directionHorizontale Traiter à gauche ou à droite.
-	 * @param directionVerticale Traiter en haut ou en bas.
+	 * @param x Original piece's X pos.
+	 * @param y Original piece's Y pos.
+	 * @param horizontalDirection
+	 * @param verticalDirection
 	 */
-	private void traiterRangee(int piece, int directionHorizontale, int directionVerticale) {
-		// Si aucune voisine n'est trouvée dans la direction, abandonner.
+	private void processRange(int piece, int horizontalDirection, int verticalDirection) {
+		// If no neighbor, exit.
 		int x = getX(piece);
 		int y = getY(piece);
-		int voisine = chercherVoisine(piece, directionHorizontale, directionVerticale);
+		int voisine = searchNeighbor(piece, horizontalDirection, verticalDirection);
 		if (voisine == -1)
 			return;
-	
-		// Calculs du nombre de pièces à analyser.
+
+		// Count number of pieces to analyze.
 		int cx = getX(voisine);
 		int cy = getY(voisine);
 		int deltaX = Math.abs(x - cx);
 		int deltaY = Math.abs(y - cy);
-	
-		int pieces = nombrePieces(directionHorizontale, directionVerticale, deltaX, deltaY);
-	
+
+		int pieces = numberOfPieces(horizontalDirection, verticalDirection, deltaX, deltaY);
+
 		for (int j = 1; j < pieces; j++)
-			retourner(x + (directionHorizontale * j), y + (directionVerticale * j));
+			reverse(x + (horizontalDirection * j), y + (verticalDirection * j));
 	}
 
-	private void traiterToutesRangees(int piece) {
-		for (int dH = HAUT; dH <= BAS; dH++)
-			for (int dV = GAUCHE; dV <= DROITE; dV++)
-				traiterRangee(piece, dH, dV);
+	private void processAllRanges(int piece) {
+		for (int dH = UP; dH <= DOWN; dH++)
+			for (int dV = LEFT; dV <= RIGHT; dV++)
+				processRange(piece, dH, dV);
 	}
 
 	@Override
 	public String toString() {
-		// TODO Auto-generated method stub
 		String m = "";
-		for (int y = 0; y < rangee; y++) {
-			for (int x = 0; x < rangee; x++)
+		for (int y = 0; y < range; y++) {
+			for (int x = 0; x < range; x++)
 				m += MatrixPiece.toChar(get(x, y));
 			m += "\n";
 		}
@@ -296,23 +294,22 @@ public class Matrix {
 	}
 
 	/**
-	 * Vérifie dans toutes les directions si un pièce possède une pièce voisine
-	 * et si oui, des pièces adverses entre elles.
+	 * Check in every directions if a piece has a neighbor and if so, opposite
+	 * pieces between it and its neighbor.
 	 * 
-	 * @param piece Pièce à traiter.
-	 * @param avecAdversaire Doit avoir des pièces adverses entre elles ?
-	 * @return Vrai si possède une voisine ou et des pièces adverses dans la
-	 *         rangée.
+	 * @param piece.
+	 * @param withOpponents Must have opposite pieces between them.
+	 * @return True if has neighbor or and opposite pieces in the same range.
 	 */
-	public boolean possedeVoisine(int piece, boolean avecAdversaire) {
+	public boolean possedeVoisine(int piece, boolean withOpponents) {
 		boolean condition = false;
-		for (int dh = HAUT; dh <= BAS; dh++) {
-			for (int dv = GAUCHE; dv <= DROITE; dv++) {
+		for (int dh = UP; dh <= DOWN; dh++) {
+			for (int dv = LEFT; dv <= RIGHT; dv++) {
 				if (dh == 0 && dv == 0)
 					continue;
-				int voisine = chercherVoisine(piece, dh, dv);
-				if (voisine != -1) {
-					condition = condition || (!avecAdversaire || (avecAdversaire && distance(piece, voisine) >= 1));
+				int neighbor = searchNeighbor(piece, dh, dv);
+				if (neighbor != -1) {
+					condition = condition || (!withOpponents || (withOpponents && distance(piece, neighbor) >= 1));
 				}
 			}
 		}

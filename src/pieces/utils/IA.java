@@ -18,7 +18,7 @@ public class IA {
 	private static int[] region4 = new int[] { 0, -3, -5 };
 	private static int[] region5 = new int[] { 0, 5, 10 };
 
-	public static int meilleurCoup(Matrix matrice, Stack<Integer> coupsPossibles, int difficulte) {
+	public static int bestMove(Matrix matrice, Stack<Integer> coupsPossibles, int difficulte) {
 		int[] valeurCoup = new int[coupsPossibles.size()];
 
 		for (int i = 0; i < coupsPossibles.size(); i++) {
@@ -76,7 +76,7 @@ public class IA {
 		// Si aucun voisin n'est trouvé dans la direction, abandonner.
 		int x = matrice.getX(piece); // piece.getCoordonnees().getX();
 		int y = matrice.getY(piece); // piece.getCoordonnees().getY();
-		int voisin = matrice.chercherVoisine(piece, directionHorizontale, directionVerticale);// chercherVoisine(piece,
+		int voisin = matrice.searchNeighbor(piece, directionHorizontale, directionVerticale);// chercherVoisine(piece,
 																								// directionHorizontale,
 																								// directionVerticale);
 		if (voisin == -1)
@@ -88,7 +88,7 @@ public class IA {
 		int deltaX = Math.abs(x - cx);
 		int deltaY = Math.abs(y - cy);
 
-		int piecesARetourner = Matrix.nombrePieces(directionHorizontale, directionVerticale, deltaX, deltaY);
+		int piecesARetourner = Matrix.numberOfPieces(directionHorizontale, directionVerticale, deltaX, deltaY);
 
 		return piecesARetourner;
 	}

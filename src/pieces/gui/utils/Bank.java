@@ -32,17 +32,17 @@ public class Bank {
 	private VolatileImage[] banque;
 	private int taillePiece;
 
-	public Bank(String fichierSequence, int images) throws SequenceIntrouvableException, IOException {
+	public Bank(String fichierSequence, int images) throws SequenceNotFoundException, IOException {
 		chargerBanque(fichierSequence);
 	}
 
-	public void chargerBanque(String fichierSequence) throws SequenceIntrouvableException, IOException {
+	public void chargerBanque(String fichierSequence) throws SequenceNotFoundException, IOException {
 		File fichier = new File(fichierSequence);
 
 		// Vérifie l'existence du fichier et renvoie une exception si ce n'est
 		// pas le cas.
 		if (!fichier.exists()) {
-			throw new SequenceIntrouvableException();
+			throw new SequenceNotFoundException();
 		}
 
 		// Récupération de la séquence.
@@ -88,8 +88,8 @@ public class Bank {
 	}
 
 	@SuppressWarnings("serial")
-	public class SequenceIntrouvableException extends Exception {
-		public SequenceIntrouvableException() {
+	public class SequenceNotFoundException extends Exception {
+		public SequenceNotFoundException() {
 			
 		}
 	}

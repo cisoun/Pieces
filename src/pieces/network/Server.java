@@ -11,66 +11,70 @@ import pieces.gui.Message;
 public class Server extends UnicastRemoteObject implements IServer {
 	private static final long serialVersionUID = 1L;
 
-	private String url;
-	private IClient hote;
+	private IClient host;
 	private IClient client;
-
-	private boolean tour;
-	private boolean jouable;
+	private boolean round;
+	private boolean playable;
 
 	/**
-	 * Serveur du Reversi.
-	 * 
-	 * @param port
-	 * @param hote
+	 * Game's server.
+	 * @param host
 	 * @throws AccessException
 	 * @throws RemoteException
 	 * @throws NotBoundException
 	 * @throws MalformedURLException
 	 */
-	public Server(IClient hote) throws AccessException, RemoteException, NotBoundException, MalformedURLException {
-		this.hote = hote;
-		this.tour = false;
-		this.jouable = false;
+	public Server(IClient host) throws AccessException, RemoteException, NotBoundException, MalformedURLException {
+		this.host = host;
+		this.round = false;
+		this.playable = false;
+	}
+
+	@Override
+	public boolean canPlay() throws RemoteException {
+		return playable;
+	}
+
+	@Override
+	public void login(IClient client) throws RemoteException, ServerFullException {
+		// Check if server has already two players.
+		// Otherwise throw an exception.
+		if (playable) {
+			throw new ServerFullException();
+		}
+	
+		// Join the client to the server and set the server as ready to play.
+		this.client = client;
+		this.playable = true;
+		
+		// Notify the host that the client is logged in.
+		this.host.handshake();
 	}
 
 	/**
-	 * 
+	 * Disconnect the players.
 	 */
 	@Override
-	public void logout(boolean joueur) throws RemoteException {
-		if (joueur) {
+	public void logout(boolean player) throws RemoteException {
+		if (player) {
 			// Le client se déconnecte.
-			hote.message("L'adversaire s'est déconnecté.", Message.ATTENTION, false, true);
+			host.message("L'adversaire s'est déconnecté.", Message.WARNING, false, true);
 			client = null;
 		} else {
 			// Le serveur se déconnecte.
 			if (client != null)
 				client.logout();
-			// client.message("L'adversaire s'est déconnecté.",
-			// Message.ATTENTION, false, true);
 		}
-		jouable = false;
+		playable = false;
 	}
 
-	@Override
-	public boolean canPlay() throws RemoteException {
-		return jouable;
-	}
 
 	@Override
 	public void play(int piece) throws RemoteException {
-		if (!tour)
-			client.poserPiece(piece);
+		if (!round)
+			client.play(piece);
 		else
-			hote.poserPiece(piece);
-		tour = !tour;
-	}
-
-	@Override
-	public void rejoindre(IClient client) throws RemoteException {
-		this.client = client;
-		this.hote.handshake();
-		this.jouable = true;
+			host.play(piece);
+		round = !round;
 	}
 }

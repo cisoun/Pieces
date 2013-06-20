@@ -21,98 +21,98 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import pieces.Game;
-import pieces.gui.utils.Couleur;
+import pieces.gui.utils.ColorTools;
 import pieces.gui.utils.Ease;
 import pieces.gui.utils.Themes;
-import pieces.gui.utils.Bank.SequenceIntrouvableException;
+import pieces.gui.utils.Bank.SequenceNotFoundException;
 import pieces.utils.Config;
 
 
 public class Options extends JPanel {
 
-	private final Font POLICE = new Font(Font.SANS_SERIF, Font.PLAIN, 11);
-	private final Font POLICE_TITRE = new Font(Font.SANS_SERIF, Font.BOLD, 12);
-	private final String TITRE = "OPTIONS";
-	private final int MARGE_TITRE = 1;
+	private final Font FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 11);
+	private final Font FONT_TITLE = new Font(Font.SANS_SERIF, Font.BOLD, 12);
+	private final String TITLE = "OPTIONS";
+	private final int MARGIN_TITLE = 1;
 
-	private Game reversi;
+	private Game game;
 	private GUI gui;
-	private JLabel lblTitreApparence;
-	private JLabel lblTitreJeu;
-	private JLabel lblApparenceTheme;
-	private JLabel lblJeuJoueurNoir;
-	private JLabel lblJeuJoueurBlanc;
-	private JCheckBox cbJeuRetournementFin;
-	private JCheckBox cbApparenceAfficherGrille;
-	private JCheckBox cbApparenceCasesPossibles;
-	private JComboBox<String> cboApparenceThemes;
-	private JComboBox<String> cboJeuJoueurNoir;
-	private JComboBox<String> cboJeuJoueurBlanc;
+	private JLabel lblTitleAppearance;
+	private JLabel lblTitleGame;
+	private JLabel lblAppearanceTheme;
+	private JLabel lblGameBlackPlayer;
+	private JLabel lblGameWhitePlayer;
+	private JCheckBox cbGameFinalAnimation;
+	private JCheckBox cbAppearanceShowGrid;
+	private JCheckBox cbAppearanceShowMoves;
+	private JComboBox<String> cboAppearanceTheme;
+	private JComboBox<String> cboGameBlackPlayer;
+	private JComboBox<String> cboGameWhitePlayer;
 
-	private int titreLargeur;
-	private int titreHauteur;
+	private int titleWidth;
+	private int titleHeight;
 
-	private String[] difficultes = new String[] { "Humain", "IA Facile", "IA Moyen", "IA Difficile" };
+	private String[] difficulties = new String[] { "Human", "Easy", "Medium", "Hard" };
 
 	private boolean cache = true;
 
-	public Options(Game reversi, GUI gui) {
+	public Options(Game game, GUI gui) {
 
-		FontMetrics fm = this.getFontMetrics(POLICE_TITRE);
-		titreHauteur = fm.stringWidth(TITRE);
-		titreLargeur = fm.getHeight();
+		FontMetrics fm = this.getFontMetrics(FONT_TITLE);
+		titleHeight = fm.stringWidth(TITLE);
+		titleWidth = fm.getHeight();
 
-		this.reversi = reversi;
+		this.game = game;
 		this.gui = gui;
 
-		// Titres
-		lblTitreApparence = new JLabel("Apparence");
-		lblTitreApparence.setFont(POLICE_TITRE);
+		// Titles
+		lblTitleAppearance = new JLabel("Appearance");
+		lblTitleAppearance.setFont(FONT_TITLE);
 
-		lblTitreJeu = new JLabel("Jeu");
-		lblTitreJeu.setFont(POLICE_TITRE);
+		lblTitleGame = new JLabel("Game");
+		lblTitleGame.setFont(FONT_TITLE);
 
 		// Options
-		cbApparenceAfficherGrille = new JCheckBox("Afficher la grille");
+		cbAppearanceShowGrid = new JCheckBox("Show grid");
 		//cbApparenceAfficherGrille.setFont(POLICE);
-		cbApparenceAfficherGrille.setOpaque(false);
-		cbApparenceAfficherGrille.setSelected(Config.get(Config.SHOW_GRID, true));
-		cbApparenceAfficherGrille.addActionListener(alAfficherGrille);
+		cbAppearanceShowGrid.setOpaque(false);
+		cbAppearanceShowGrid.setSelected(Config.get(Config.SHOW_GRID, true));
+		cbAppearanceShowGrid.addActionListener(alAfficherGrille);
 
-		cbApparenceCasesPossibles = new JCheckBox("Afficher les cases possibles");
+		cbAppearanceShowMoves = new JCheckBox("Show moves");
 		//cbApparenceCasesPossibles.setFont(POLICE);
-		cbApparenceCasesPossibles.setOpaque(false);
-		cbApparenceCasesPossibles.setSelected(Config.get(Config.SHOW_MOVES, false));
-		cbApparenceCasesPossibles.addActionListener(alCoupsPossibles);
+		cbAppearanceShowMoves.setOpaque(false);
+		cbAppearanceShowMoves.setSelected(Config.get(Config.SHOW_MOVES, false));
+		cbAppearanceShowMoves.addActionListener(alCoupsPossibles);
 
-		lblApparenceTheme = new JLabel("Thème du jeu : ");
+		lblAppearanceTheme = new JLabel("Visual theme : ");
 		//lblApparenceTheme.setFont(POLICE);
 
-		cboApparenceThemes = new JComboBox<String>(Themes.getNomThemes());
-		cboApparenceThemes.setOpaque(false);
-		cboApparenceThemes.setSelectedIndex(Themes.getThemeIndex(Config.get(Config.THEME, "Default")));
-		cboApparenceThemes.addActionListener(alThemes);
+		cboAppearanceTheme = new JComboBox<String>(Themes.getNomThemes());
+		cboAppearanceTheme.setOpaque(false);
+		cboAppearanceTheme.setSelectedIndex(Themes.getThemeIndex(Config.get(Config.THEME, "Default")));
+		cboAppearanceTheme.addActionListener(alThemes);
 
-		cbJeuRetournementFin = new JCheckBox("Retourner les pièces à la fin de la partie");
-		cbJeuRetournementFin.setOpaque(false);
-		cbJeuRetournementFin.setSelected(Config.get(Config.END_ANIMATION, false));
-		cbJeuRetournementFin.addActionListener(alRetournementFin);
+		cbGameFinalAnimation = new JCheckBox("Reverse pieces at the end");
+		cbGameFinalAnimation.setOpaque(false);
+		cbGameFinalAnimation.setSelected(Config.get(Config.END_ANIMATION, false));
+		cbGameFinalAnimation.addActionListener(alRetournementFin);
 
-		lblJeuJoueurNoir = new JLabel("Joueur noir : ");
+		lblGameBlackPlayer = new JLabel("Black player : ");
 
-		cboJeuJoueurNoir = new JComboBox<String>(difficultes);
-		cboJeuJoueurNoir.setOpaque(false);
-		cboJeuJoueurNoir.setSelectedIndex(Integer.valueOf(Config.get(Config.DIFFICULTY_BLACK, "0")));
-		cboJeuJoueurNoir.addActionListener(alDifficulteNoir);
+		cboGameBlackPlayer = new JComboBox<String>(difficulties);
+		cboGameBlackPlayer.setOpaque(false);
+		cboGameBlackPlayer.setSelectedIndex(Integer.valueOf(Config.get(Config.DIFFICULTY_BLACK, "0")));
+		cboGameBlackPlayer.addActionListener(alDifficulteNoir);
 
-		lblJeuJoueurBlanc = new JLabel("Joueur blanc : ");
+		lblGameWhitePlayer = new JLabel("White player : ");
 
-		cboJeuJoueurBlanc = new JComboBox<String>(difficultes);
-		cboJeuJoueurBlanc.setOpaque(false);
-		cboJeuJoueurBlanc.setSelectedIndex(Integer.valueOf(Config.get(Config.DIFFICULTY_WHITE, "0")));
-		cboJeuJoueurBlanc.addActionListener(alDifficulteBlanc);
+		cboGameWhitePlayer = new JComboBox<String>(difficulties);
+		cboGameWhitePlayer.setOpaque(false);
+		cboGameWhitePlayer.setSelectedIndex(Integer.valueOf(Config.get(Config.DIFFICULTY_WHITE, "0")));
+		cboGameWhitePlayer.addActionListener(alDifficulteBlanc);
 
-		// Placements
+		// Layout
 		setLayout(new GridBagLayout());
 
 		GridBagConstraints gbc = new GridBagConstraints();
@@ -121,60 +121,60 @@ public class Options extends JPanel {
 
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 
-		// Apparence
+		// Appearance
 		gbc.gridwidth = 2;
 		gbc.gridx = 0;
 		gbc.gridy = y++;
-		add(lblTitreApparence, gbc);
+		add(lblTitleAppearance, gbc);
 
 		gbc.gridy = y++;
 		add(Box.createVerticalStrut(30));
 
 		gbc.gridy = y++;
-		add(cbApparenceAfficherGrille, gbc);
+		add(cbAppearanceShowGrid, gbc);
 
 		gbc.gridy = y++;
-		add(cbApparenceCasesPossibles, gbc);
+		add(cbAppearanceShowMoves, gbc);
 
 		gbc.gridwidth = 1;
 		gbc.gridx = 0;
 		gbc.gridy = y;
-		add(lblApparenceTheme, gbc);
+		add(lblAppearanceTheme, gbc);
 
 		gbc.gridx = 1;
 		gbc.gridy = y++;
-		add(cboApparenceThemes, gbc);
+		add(cboAppearanceTheme, gbc);
 
-		// Jeu
+		// Game
 		gbc.gridwidth = 2;
 		gbc.gridx = 0;
 		gbc.gridy = y++;
 		add(Box.createVerticalStrut(30), gbc);
 
 		gbc.gridy = y++;
-		add(lblTitreJeu, gbc);
+		add(lblTitleGame, gbc);
 
 		gbc.gridy = y++;
 		add(Box.createVerticalStrut(10), gbc);
 
 		gbc.gridy = y++;
-		add(cbJeuRetournementFin, gbc);
+		add(cbGameFinalAnimation, gbc);
 
 		gbc.gridwidth = 1;
 		gbc.gridx = 0;
 		gbc.gridy = y++;
-		add(lblJeuJoueurNoir, gbc);
+		add(lblGameBlackPlayer, gbc);
 
 		gbc.gridx = 1;
-		add(cboJeuJoueurNoir, gbc);
+		add(cboGameBlackPlayer, gbc);
 		
 		gbc.gridwidth = 1;
 		gbc.gridx = 0;
 		gbc.gridy = y++;
-		add(lblJeuJoueurBlanc, gbc);
+		add(lblGameWhitePlayer, gbc);
 
 		gbc.gridx = 1;
-		add(cboJeuJoueurBlanc, gbc);
+		add(cboGameWhitePlayer, gbc);
 
 		setPreferredSize(new Dimension(0, getHeight()));
 		setBorder(BorderFactory.createEmptyBorder(10, 50, 10, 10));
@@ -225,22 +225,22 @@ public class Options extends JPanel {
 		// g2d.fillRect(0, 0, 10, getHeight());
 
 		// Titre.
-		g2d.setColor(Couleur.assombrir(gui.getBackground(), 20));
-		g2d.fillRect(MARGE_TITRE, 0, titreLargeur + 20, getHeight());
+		g2d.setColor(ColorTools.darken(gui.getBackground(), 20));
+		g2d.fillRect(MARGIN_TITLE, 0, titleWidth + 20, getHeight());
 
 		g2d.setColor(new Color(50, 50, 50));
 		// g2d.fillRect(0, 20, titreLargeur + 20, titreHauteur + 20);
-		g2d.fillRect(MARGE_TITRE, 0, titreLargeur + 20, getHeight());
+		g2d.fillRect(MARGIN_TITLE, 0, titleWidth + 20, getHeight());
 
-		g2d.translate(MARGE_TITRE + titreLargeur + 7, titreHauteur + 25);
+		g2d.translate(MARGIN_TITLE + titleWidth + 7, titleHeight + 25);
 		g2d.rotate(Math.toRadians(-90));
 
-		g2d.setFont(POLICE_TITRE);
+		g2d.setFont(FONT_TITLE);
 		g2d.setColor(Color.WHITE);
-		g2d.drawString(TITRE, 0, 0);
+		g2d.drawString(TITLE, 0, 0);
 
 		g2d.rotate(Math.toRadians(90));
-		g2d.translate(-MARGE_TITRE - titreLargeur - 7, -titreHauteur - 25);
+		g2d.translate(-MARGIN_TITLE - titleWidth - 7, -titleHeight - 25);
 
 		// Bordure.
 		// g2d.setColor(Themes.getThemeCourant().getBackground());
@@ -251,9 +251,9 @@ public class Options extends JPanel {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			boolean selectionne = cbApparenceAfficherGrille.isSelected();
+			boolean selectionne = cbAppearanceShowGrid.isSelected();
 			Config.set(Config.SHOW_GRID, selectionne);
-			cbApparenceAfficherGrille.setSelected(selectionne);
+			cbAppearanceShowGrid.setSelected(selectionne);
 			gui.getGrille().repaint();
 		}
 	};
@@ -261,10 +261,10 @@ public class Options extends JPanel {
 	ActionListener alCoupsPossibles = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			boolean selectionne = cbApparenceCasesPossibles.isSelected();
+			boolean selectionne = cbAppearanceShowMoves.isSelected();
 			Config.set(Config.SHOW_MOVES, selectionne);
-			cbApparenceCasesPossibles.setSelected(selectionne);
-			cbApparenceCasesPossibles.repaint();
+			cbAppearanceShowMoves.setSelected(selectionne);
+			cbAppearanceShowMoves.repaint();
 			gui.getGrille().repaint();
 		}
 	};
@@ -272,7 +272,7 @@ public class Options extends JPanel {
 	ActionListener alThemes = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			String nom = cboApparenceThemes.getItemAt(cboApparenceThemes.getSelectedIndex()).toString();
+			String nom = cboAppearanceTheme.getItemAt(cboAppearanceTheme.getSelectedIndex()).toString();
 			// boolean valide =
 			// Themes.estValide(cboThemes.getItemAt(cboThemes.getSelectedIndex()).toString());
 			Config.set(Config.THEME, nom);
@@ -280,7 +280,7 @@ public class Options extends JPanel {
 			Themes.setThemeCourant(nom);
 			try {
 				gui.getBanque().chargerBanque(Themes.getThemeCourant().getSequencePath());
-			} catch (SequenceIntrouvableException | IOException e) {
+			} catch (SequenceNotFoundException | IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -293,7 +293,7 @@ public class Options extends JPanel {
 	ActionListener alRetournementFin = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			boolean selectionne = cbJeuRetournementFin.isSelected();
+			boolean selectionne = cbGameFinalAnimation.isSelected();
 			Config.set(Config.END_ANIMATION, selectionne);
 		}
 	};
@@ -301,24 +301,24 @@ public class Options extends JPanel {
 	ActionListener alDifficulteNoir = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			int index = cboJeuJoueurNoir.getSelectedIndex();
+			int index = cboGameBlackPlayer.getSelectedIndex();
 			Config.set(Config.DIFFICULTY_BLACK, String.valueOf(index));
-			reversi.updateJoueurs();
+			game.updatePlayers();
 		}
 	};
 
 	ActionListener alDifficulteBlanc = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			int index = cboJeuJoueurBlanc.getSelectedIndex();
+			int index = cboGameWhitePlayer.getSelectedIndex();
 			Config.set(Config.DIFFICULTY_WHITE, String.valueOf(index));
-			reversi.updateJoueurs();
+			game.updatePlayers();
 		}
 	};
 
 	private void redessiner() {
 		Color couleurFond = Themes.getThemeCourant().getBackground();
-		Color couleurTexte = Couleur.luminosite(Themes.getThemeCourant().getBackground()) < 128 ? Color.WHITE : Color.BLACK;
+		Color couleurTexte = ColorTools.getLuminosity(Themes.getThemeCourant().getBackground()) < 128 ? Color.WHITE : Color.BLACK;
 
 		setBackground(couleurFond);
 		setForeground(couleurTexte);

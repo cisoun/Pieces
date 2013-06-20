@@ -9,6 +9,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 import pieces.Game;
+import pieces.network.IServer.ServerFullException;
 import pieces.utils.Config;
 
 
@@ -16,40 +17,37 @@ import pieces.utils.Config;
 public class Network {
 	public static final int DEFAULT_PORT = 9001;
 	public static final String DEFAULT_SERVER = "127.0.0.1";
-	public static final String POLICY = "file:./server.policy";
+	public static final String POLICY = "file:./pieces.policy";
 
 	private static IServer server;
 
 	/**
-	 * Créé un serveur de jeu.
-	 * @param host Client reversi faisant hôte.
+	 * Create a game server to the host.
+	 * @param host Host's client.
 	 * @throws AccessException
 	 * @throws RemoteException
 	 * @throws NotBoundException
 	 * @throws MalformedURLException
 	 */
-	public static void creerServeur(IClient host) throws AccessException, RemoteException, NotBoundException, MalformedURLException
+	public static void createServer(IClient host) throws AccessException, RemoteException, NotBoundException, MalformedURLException
 	{
 		int port = Config.get(Config.PORT, DEFAULT_PORT);
 		
-		//System.setProperty("java.rmi.server.hostname", "127.0.0.1");
-		
-		// Autorisation complète d'utiliser le socket.
+		// Full authorization to use the socket.
 		System.setProperty("java.security.policy", POLICY);
 		
 		if (System.getSecurityManager() == null)
 			System.setSecurityManager(new RMISecurityManager());
-
-		server = new Server(host);
 		
-		// Initialisation du RMI.
+		// RMI
+		server = new Server(host);
 		Registry registry = LocateRegistry.createRegistry(port);
 		registry.rebind(Game.APP_NAME, server);
 	}
 	
 	/**
-	 * Déconnecte les joueurs.
-	 * @param Joueur responsable de la déconnexion.
+	 * Log the players out.
+	 * @param Player who terminated the game.
 	 * @throws RemoteException
 	 */
 	public static void logout(boolean player) throws RemoteException
@@ -58,9 +56,9 @@ public class Network {
 	}
 	
 	/**
-	 * Permet d'obtenir l'état du jeu.
-	 * On considère qu'il est jouable du moment qu'il y a un hôte et un client.
-	 * @return Est-il jouable ?
+	 * Obtain the game's state.
+	 * It is considered playable as long as there is a host and a client.
+	 * @return Playable ?
 	 * @throws RemoteException
 	 */
 	public static boolean canPlay() throws RemoteException
@@ -69,22 +67,23 @@ public class Network {
 	}
 
 	/**
-	 * Pose une pièce au joueur inactif.
-	 * @param piece Pièce retournée par le joueur actif.
+	 * Put a piece to the inactive player.
+	 * @param piece Played piece.
 	 * @throws RemoteException
 	 */
-	public static void poserPiece(int piece) throws RemoteException
+	public static void putPiece(int piece) throws RemoteException
 	{
 		server.play(piece);
 	}
 	
 	/**
-	 * Permet à un client de se connecter sur le serveur.
+	 * Log a player to the server.
 	 * @param client Client reversi.
 	 * @throws RemoteException
 	 * @throws NotBoundException
+	 * @throws ServerFullException 
 	 */
-	public static void login(IClient client) throws RemoteException, NotBoundException
+	public static void login(IClient client) throws RemoteException, NotBoundException, ServerFullException
 	{
 		String address = Config.get(Config.SERVER, DEFAULT_SERVER);
 		int port = Config.get(Config.PORT, DEFAULT_PORT);
@@ -97,6 +96,6 @@ public class Network {
 		
 		Registry registry = LocateRegistry.getRegistry(address, port);
 		server = (IServer) registry.lookup(Game.APP_NAME);
-		server.rejoindre(client);
+		server.login(client);
 	}
 }

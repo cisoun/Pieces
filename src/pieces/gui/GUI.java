@@ -15,43 +15,45 @@ import pieces.gui.menu.Menu;
 import pieces.gui.menu.MenuBar;
 import pieces.gui.utils.Bank;
 import pieces.gui.utils.Themes;
-import pieces.gui.utils.Bank.SequenceIntrouvableException;
+import pieces.gui.utils.Bank.SequenceNotFoundException;
 import pieces.utils.Config;
 import pieces.utils.Matrix.MatrixPiece;
 
-
 public class GUI extends JFrame {
 
-	private Game reversi;
+	private Game game;
 	public Themes theme;
-	private Bank banque = null;
+	private Bank bank = null;
 
 	private MenuBar menu;
-	private Grid grille;
+	private Grid grid;
 	private Message message;
 	private Scores scores;
 	private Options options;
-	private Multiplayer multijoueur;
-	private Board plateau;
+	private Multiplayer multiplayer;
+	private Board board;
 
-	private Menu menuNouvellePartie;
-	private Menu menuMultijoueur;
+	private Menu menuNewGame;
+	private Menu menuMultiplayer;
 	private Menu menuOptions;
-	private Menu menuApropos;
+	private Menu menuAbout;
 
-	public GUI(Game reversi) {
+	public GUI(Game game) {
 
-		this.reversi = reversi;
+		this.game = game;
 
+		// Load config.
 		Config.load();
+
+		// Load theme.
 		Themes.chargerThemes();
 		Themes.setThemeCourant(Config.get(Config.THEME, "Pieces"));
-
-		// Chargement des thèmes.
 		try {
-			banque = new Bank("themes/" + Themes.getThemeCourant().getName() + "/sequence.png", 10);
-		} catch (SequenceIntrouvableException sie) {
-			// sie.printStackTrace();
+			bank = new Bank("themes/" + Themes.getThemeCourant().getName() + "/sequence.png", 10);
+		} catch (SequenceNotFoundException snfe) {
+			String message = "Cannot load current theme : " + Themes.getThemeCourant().getName();
+			System.err.println(message);
+			JOptionPane.showMessageDialog(this, message, game.APP_NAME, JOptionPane.ERROR_MESSAGE, null);
 			return;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -59,57 +61,58 @@ public class GUI extends JFrame {
 		}
 		setBackground(Themes.getThemeCourant().getGridBackground());
 
-		// Initialisation des composants.
+		// Components initialization.
 		menu = new MenuBar();
 		message = new Message(this);
-		grille = new Grid(reversi, banque);
-		scores = new Scores(reversi, banque);
-		options = new Options(reversi, this);
-		multijoueur = new Multiplayer(reversi);
-		plateau = new Board(grille, message, options, multijoueur);
+		grid = new Grid(game, bank);
+		scores = new Scores(game, bank);
+		options = new Options(game, this);
+		multiplayer = new Multiplayer(game);
+		board = new Board(grid, message, options, multiplayer);
 
+		// Ugly layout hack.
 		JPanel panel = new JPanel();
 		panel.setLayout(new BorderLayout());
-		panel.add(multijoueur, BorderLayout.NORTH);
-		panel.add(plateau, BorderLayout.CENTER);
+		panel.add(multiplayer, BorderLayout.NORTH);
+		panel.add(board, BorderLayout.CENTER);
 
-		creerMenus();
+		createMenus();
 
-		// Affichage.
+		// Display.
 		setLayout(new BorderLayout());
 		add(menu, BorderLayout.NORTH);
 		add(panel, BorderLayout.CENTER);
 		add(scores, BorderLayout.SOUTH);
 		add(options, BorderLayout.EAST);
 
-		// NÉCESSAIRE ?
+		// NEEDED FOR WINDOWS ?
 		revalidate();
 		repaint();
-		
-		setTitle("Pieces");
+
+		setTitle(game.APP_NAME);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setSize(600, 600);
 		setVisible(true);
 	}
 
-	private void creerMenus() {
-		menuNouvellePartie = new Menu("Nouvelle partie") {
+	private void createMenus() {
+		menuNewGame = new Menu("New game") {
 			@Override
 			public void action() {
 				super.action();
-				reversi.newGame();
+				game.newGame();
 			}
 		};
 
-		menuMultijoueur = new Menu("Multijoueur") {
+		menuMultiplayer = new Menu("Multiplayer") {
 			@Override
 			public void action() {
 				super.action();
-				if (reversi.isMultijoueur())
-					reversi.logout();
+				if (game.isMultiplayer())
+					game.logout();
 				else
-					multijoueur.afficher();
-				multijoueur();
+					multiplayer.toggle();
+				multiplayer();
 			}
 		};
 
@@ -121,133 +124,100 @@ public class GUI extends JFrame {
 			}
 		};
 
-		menuApropos = new Menu("?") {
+		menuAbout = new Menu("?") {
 			@Override
 			public void action() {
-				// TODO Auto-generated method stub
 				super.action();
-				afficherApropos();
+				about();
 			}
 		};
 
-		menu.addMenu(menuNouvellePartie);
-		menu.addMenu(menuMultijoueur);
+		menu.addMenu(menuNewGame);
+		menu.addMenu(menuMultiplayer);
 		menu.addMenu(menuOptions);
-		menu.addMenu(menuApropos);
+		menu.addMenu(menuAbout);
 	}
 
-	public void afficherApropos() {
+	public void about() {
 		StringBuilder message = new StringBuilder();
-		message.append("PIECES");
-		message.append("\n\n");
-		message.append("Auteurs : ");
-		message.append("\n");
-		message.append("Guillaume Simon-Gentil");
-		message.append("\n");
-		message.append("Cyriaque Skrapits");
+		message.append("<html>");
+		message.append("<h1>" + game.APP_NAME + "</h1>");
+		message.append("Version " + game.APP_VERSION + "<br/>");
+		message.append("<br/>");
+		message.append("<p>Authors : ");
+		message.append("<br/>");
+		message.append("Guillaume Simon-Gentil (AI)<br/>");
+		message.append("Cyriaque Skrapits (core developer)");
+		message.append("</p></html>");
 		Icon icone = new Icon() {
 
 			@Override
 			public void paintIcon(Component c, Graphics g, int x, int y) {
-				g.drawImage(banque.getImage(0), 0, 0, 60, 60, null);
+				g.drawImage(bank.getImage(0), 0, 0, 60, 60, null);
 			}
 
 			@Override
 			public int getIconWidth() {
-				// TODO Auto-generated method stub
 				return 60;
 			}
 
 			@Override
 			public int getIconHeight() {
-				// TODO Auto-generated method stub
 				return 60;
 			}
 		};
-		JOptionPane.showMessageDialog(this, message.toString(), "À propos de Pieces...", JOptionPane.INFORMATION_MESSAGE, icone);
+		JOptionPane.showMessageDialog(this, message.toString(), "About " + game.APP_NAME + "...", JOptionPane.INFORMATION_MESSAGE, icone);
 	}
 
-	private void animationFin() {
+	public void finalAnimation() {
 		if (!Config.get(Config.END_ANIMATION, true))
 			return;
 
 		Thread animation = new Thread(new Runnable() {
-			int noirs = reversi.matrice.score(MatrixPiece.NOIR);
+			int pieces = game.getMatrix().pieces();
+			int noirs = game.getMatrix().score(MatrixPiece.BLACK);
 
 			@Override
 			public void run() {
 				for (int i = 0; i < 64; i++) {
-					Piece p = grille.getPiece(i);
-					if (!p.isVisible())
-						p.setVisible(true);
-					if (p.isRetourne() == noirs > 0)
-						p.retourner();
-					noirs--;
-					try {
-						Thread.sleep(20);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+					int piece = game.getMatrix().get(i);
+					Piece p = grid.getPiece(i);
+					if (i < pieces) {
+						if (!p.isVisible())
+							p.setVisible(true);
+						if (p.isReversed() == noirs > 0)
+							p.retourner();
+						noirs--;
+						try {
+							Thread.sleep(20);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						repaint();
+						revalidate();
+					} else {
+						p.setVisible(false);
 					}
-					repaint();
-					revalidate();
 				}
 			}
 		});
 		animation.start();
 	}
 
-	public void changerTour() {
-		int scoreNoir = reversi.matrice.score(MatrixPiece.NOIR);
-		int scoreBlanc = reversi.matrice.score(MatrixPiece.BLANC);
-		
-		// Si grille remplie...
-		if (scoreNoir + scoreBlanc == 64) {
-			if (scoreNoir == scoreBlanc)
-				message.message("Match nul !", Message.ATTENTION, true, false);
-			else
-				message.message("Les " + (scoreNoir > scoreBlanc ? "noirs" : "blancs") + " ont gagné !", Message.OK, true, false);
-			animationFin();
-			return;
-		}
-		// ...sinon match nul ou joueur bloqué.
-		else
-		{
-			// Au cas où il ne resterait plus qu'un joueur...
-			if (scoreNoir == 0 || scoreBlanc == 0)
-			{
-				reversi.message("Les " + (scoreNoir == 0 ? "blancs" : "noirs") + " ont gagnée !", Message.OK, true, true);
-				return;
-			}
-			int scores = scoreNoir + scoreBlanc;
-			// Évite l'évaluation à l'initialisation de la partie.
-			if (scores > 4 && reversi.matrice.coupsPossibles.size() == 0) {
-				reversi.changerTour();
-				reversi.chercherMouvements();
-				if (reversi.matrice.coupsPossibles.size() == 0)
-				{
-					if (scoreNoir == scoreBlanc)
-						reversi.message("Match nul.", Message.ATTENTION, true, true);
-					else
-						message.message("Les " + (scoreNoir > scoreBlanc ? "noirs" : "blancs") + " ont gagné !", Message.OK, true, false);
-				}
-				return;
-			}
-		}
-
-		// Affichage du joueur autorisé à jouer.
+	public void changeRound() {
+		// Shows which player is allowed to play.
 		String m;
-		m = "C'est aux " + (reversi.tour() ? "blancs" : "noirs") + " de jouer.";
+		m = "It's time for the " + (game.tour() ? "whites" : "blacks") + " to play.";
 		System.out.println(m);
-		message.message(m, Message.NEUTRE, false, true);
+		message.message(m, Message.NORMAL, false, true);
 	}
-	
+
 	public Bank getBanque() {
-		return this.banque;
+		return this.bank;
 	}
 
 	public Grid getGrille() {
-		return this.grille;
+		return this.grid;
 	}
 
 	public Scores getScores() {
@@ -261,22 +231,22 @@ public class GUI extends JFrame {
 	}
 
 	public void nouvellePartie() {
-		grille.initialiser();
+		grid.initialiser();
 		message.cacher();
 		scores.afficher();
 	}
-	
-	public void poserPiece(int piece) {
-		grille.poserPiece(piece, reversi.tour());
+
+	public void play(int piece) {
+		grid.poserPiece(piece, game.tour());
 	}
 
 	public void redessiner() {
-		multijoueur.redessiner();
+		multiplayer.redraw();
 		setBackground(Themes.getThemeCourant().getGridBackground());
 		repaint();
 	}
 
-	public void multijoueur() {
-		menuMultijoueur.setTexte(reversi.isMultijoueur() ? "Déconnexion" : "Multijoueur");
+	public void multiplayer() {
+		menuMultiplayer.setTexte(game.isMultiplayer() ? "Disconnect" : "Multiplayer");
 	}
 }

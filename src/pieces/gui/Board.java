@@ -45,7 +45,7 @@ public class Board extends JPanel {
 					g2d.drawImage(image, x * largeur, y * hauteur, largeur, hauteur, null);
 				}
 		}
-		if (!multiplayer.isCache())
+		if (!multiplayer.isHidden())
 		{
 			g2d.setColor(Color.BLACK);
 			for (int i = 0; i < 20; i++) {

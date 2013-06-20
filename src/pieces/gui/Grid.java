@@ -22,7 +22,7 @@ import pieces.utils.Matrix.MatrixPiece;
 public class Grid extends JPanel {
 	private static final long serialVersionUID = 1L;
 
-	private Game jeu;
+	private Game game;
 	private Piece[] pieces;
 	private Bank banque;
 
@@ -45,7 +45,7 @@ public class Grid extends JPanel {
 	public static final boolean BLANC = true;
 
 	public Grid(Game jeu, Bank banque) {
-		this.jeu = jeu;
+		this.game = jeu;
 		this.banque = banque;
 
 		setLayout(null);
@@ -141,7 +141,7 @@ public class Grid extends JPanel {
 		int piecesVerticales = directionVerticale == HAUT ? y : RANGEE - y - 1;
 		int pieces = nombrePieces(directionHorizontale, directionVerticale, piecesHorizontale, piecesVerticales);
 
-		boolean retourne = getPiece(x, y).isRetourne();
+		boolean retourne = getPiece(x, y).isReversed();
 
 		// Vérifie dans la rangée où se trouve la pièce voisine.
 		for (int i = 1; i <= pieces; i++) {
@@ -150,7 +150,7 @@ public class Grid extends JPanel {
 			if (!voisine.isVisible())
 				return null;
 			// Voisine trouvée !
-			if (voisine.isRetourne() == retourne) {
+			if (voisine.isReversed() == retourne) {
 				return voisine;
 			}
 		}
@@ -159,19 +159,19 @@ public class Grid extends JPanel {
 
 	private void dessinerCoupsPossibles(Graphics2D g2d) {
 		// Dessine si option activée ou tour = faux (noirs).
-		if (!Config.get(Config.SHOW_MOVES, false) || !jeu.isJouable())
+		if (!Config.get(Config.SHOW_MOVES, false) || !game.isJouable())
 			return;
 	
 		Color couleurIndice = Themes.getThemeCourant().getGridHint();
 	
 		g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
-		if (jeu.matrice.coupsPossibles.size() > 0) {
-			for (int i = 0; i < jeu.matrice.coupsPossibles.size(); i++) {
-				int c = jeu.matrice.coupsPossibles.elementAt(i);
+		if (game.getMatrix().movesAvailable.size() > 0) {
+			for (int i = 0; i < game.getMatrix().movesAvailable.size(); i++) {
+				int c = game.getMatrix().movesAvailable.elementAt(i);
 				// g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
 				// 0.5f));
 				g2d.setColor(couleurIndice);
-				g2d.fillRect(margeX + tailleCase * jeu.matrice.getX(c), margeY + tailleCase * jeu.matrice.getY(c), tailleCase, tailleCase);
+				g2d.fillRect(margeX + tailleCase * game.getMatrix().getX(c), margeY + tailleCase * game.getMatrix().getY(c), tailleCase, tailleCase);
 			}
 		}
 		g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
@@ -208,7 +208,7 @@ public class Grid extends JPanel {
 		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent event) {
-				if (!jeu.isJouable())
+				if (!game.isJouable())
 					return;
 				
 				// Récupèration de la pièce se trouvant sous le curseur.
@@ -221,23 +221,23 @@ public class Grid extends JPanel {
 	
 				System.out.println("[" + (x + 1) + "," + (y + 1) + "]");
 				//Piece piece = getPiece(x, y);
-				int piece = jeu.matrice.getIndex(x, y);
+				int piece = game.getMatrix().getIndex(x, y);
 
 				// Si case déjà prise, annuler.
-				if (jeu.matrice.get(piece) != MatrixPiece.VIDE)
+				if (game.getMatrix().get(piece) != MatrixPiece.EMPTY)
 					return;
 
 				// Vérifie c'est une case valide.
-				jeu.matrice.set(piece, jeu.tour() ? MatrixPiece.BLANC : MatrixPiece.NOIR);
-				if (!jeu.matrice.possedeVoisine(piece, true)) {
-					jeu.matrice.set(piece, MatrixPiece.VIDE);
-					jeu.message("Vous ne pouvez pas poser de pièce ici !", Message.ERREUR, false, true);
+				game.getMatrix().set(piece, game.tour() ? MatrixPiece.WHITE : MatrixPiece.BLACK);
+				if (!game.getMatrix().possedeVoisine(piece, true)) {
+					game.getMatrix().set(piece, MatrixPiece.EMPTY);
+					game.message("Vous ne pouvez pas poser de pièce ici !", Message.ERROR, false, true);
 					return;
 				}
 	
 				// Poser les pièces.
-				poserPiece(piece, jeu.tour());
-				jeu.poserPiece(piece);
+				poserPiece(piece, game.tour());
+				game.play(piece);
 				repaint();
 			}
 		});

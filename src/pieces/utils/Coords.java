@@ -33,7 +33,7 @@ public class Coords {
 	}
 	
 	public static String toString(int x, int y) {
-		return "Coordonnees [x=" + (x + 1) + ", y=" + (y + 1) + "]";
+		return "[x=" + (x + 1) + ", y=" + (y + 1) + "]";
 
 	}
 }

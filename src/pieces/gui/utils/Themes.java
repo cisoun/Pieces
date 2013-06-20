@@ -21,7 +21,7 @@ public class Themes {
 	public static final Color BACKGROUND = SystemColor.window;
 	public static final Color GRID_BACKGROUND = SystemColor.window;
 	public static final Color GRID_LINES = SystemColor.window.brighter();
-	public static final Color GRID_HINT = Couleur.assombrir(GRID_BACKGROUND, 20);
+	public static final Color GRID_HINT = ColorTools.darken(GRID_BACKGROUND, 20);
 	
 	private static HashMap<String, Theme> _themes = new HashMap<String, Theme>();
 	private static ArrayList<String> themesDisponibles = new ArrayList<String>();
@@ -58,7 +58,7 @@ public class Themes {
 		
 		private Color getPropriete(String cle, Color defaut)
 		{
-			return Couleur.toColor(properties.getProperty(cle, Couleur.toHex(defaut)));
+			return ColorTools.toColor(properties.getProperty(cle, ColorTools.toHex(defaut)));
 		}
 		
 		public Color getBackground()

@@ -9,7 +9,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import javax.swing.JPanel;
 
-import pieces.gui.utils.Couleur;
+import pieces.gui.utils.ColorTools;
 import pieces.gui.utils.Themes;
 
 
@@ -42,14 +42,14 @@ public class MenuBar extends JPanel {
 		Graphics2D g2d = (Graphics2D) g;
 
 		Color background = Themes.getThemeCourant().getBackground();
-		Color backgroundDark = Couleur.assombrir(background, 20);
+		Color backgroundDark = ColorTools.darken(background, 20);
 
 		//setPreferredSize(new Dimension(getWidth(), Menu.getHauteur() + 2));
 
 		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
 		// Fond.
-		GradientPaint gp = new GradientPaint(0, 0, flat ? backgroundDark : background, 0, getHeight(), Couleur.assombrir(background, 20));
+		GradientPaint gp = new GradientPaint(0, 0, flat ? backgroundDark : background, 0, getHeight(), ColorTools.darken(background, 20));
 
 		g2d.setPaint(gp);
 		g2d.fillRect(0, 0, getWidth(), getHeight());

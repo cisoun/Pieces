@@ -11,7 +11,7 @@ import javax.swing.JTextField;
 import pieces.Game;
 import pieces.gui.menu.Menu;
 import pieces.gui.menu.MenuBar;
-import pieces.gui.utils.Couleur;
+import pieces.gui.utils.ColorTools;
 import pieces.gui.utils.Ease;
 import pieces.gui.utils.Themes;
 import pieces.network.Network;
@@ -20,7 +20,7 @@ import pieces.utils.Config;
 
 
 public class Multiplayer extends MenuBar {
-	private Game reversi;
+	private Game game;
 
 	private JLabel lblIP;
 	private JLabel lblPort;
@@ -29,27 +29,27 @@ public class Multiplayer extends MenuBar {
 	private JButton btnOK;
 	private JButton btnCreerPartie;
 
-	private Menu menuRejoindre;
-	private Menu menuCreerPartie;
+	private Menu menuJoin;
+	private Menu menuCreateGame;
 
 	private int hauteur;
-	private boolean cache = true;
+	private boolean hidden = true;
 
-	public Multiplayer(final Game reversi) {
+	public Multiplayer(final Game game) {
 		super(true);
 
-		this.reversi = reversi;
+		this.game = game;
 
 		//setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 
-		lblIP = new JLabel("Adresse IP de l'adversaire : ");
+		lblIP = new JLabel("Opponent's IP : ");
 		lblPort = new JLabel("Port : ");
 		txtIP = new JTextField(Config.get(Config.SERVER, "127.0.0.1"));
 		txtIP.setColumns(10);
 		txtPort = new JTextField(String.valueOf(Network.DEFAULT_PORT));
 		txtPort.setColumns(4);
 
-		menuRejoindre = new Menu("Rejoindre") {
+		menuJoin = new Menu("Join a game") {
 			@Override
 			public void action() {
 				super.action();
@@ -57,18 +57,18 @@ public class Multiplayer extends MenuBar {
 				int port = Integer.valueOf(txtPort.getText());
 				Config.set(Config.SERVER, serveur);
 				Config.set(Config.PORT, port);
-				reversi.rejoindre();
-				afficher();
+				game.login();
+				toggle();
 			}
 		};
-		menuCreerPartie = new Menu("Créer une partie") {
+		menuCreateGame = new Menu("Create a game") {
 			@Override
 			public void action() {
 				super.action();
 				int port = Integer.valueOf(txtPort.getText());
 				Config.set(Config.PORT, port);
-				reversi.multiplayer();
-				afficher();
+				game.multiplayer();
+				toggle();
 			}
 		};
 
@@ -78,21 +78,21 @@ public class Multiplayer extends MenuBar {
 		add(lblPort);
 		add(txtPort);
 		add(Box.createHorizontalStrut(10));
-		add(menuRejoindre);
+		add(menuJoin);
 		add(Box.createHorizontalStrut(10));
-		add(menuCreerPartie);
+		add(menuCreateGame);
 
 		hauteur = getPreferredSize().height;
 		setPreferredSize(new Dimension(getWidth(), 0));
 
-		redessiner();
+		redraw();
 	}
 
-	public void afficher() {
+	public void toggle() {
 		Thread animation = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				boolean c = cache;
+				boolean c = hidden;
 				for (int i = 0; i <= 10; i++) {
 					int y = (int) (Math.abs((c ? 1.0 : 0.0) - (Ease.InOutSine(i, 0, 1, 10))) * hauteur);
 					try {
@@ -107,25 +107,23 @@ public class Multiplayer extends MenuBar {
 		});
 		animation.start();
 
-		cache = !cache;
+		hidden = !hidden;
 	}
 
-	public boolean isCache() {
-		return cache;
+	public boolean isHidden() {
+		return hidden;
 	}
 
-	public void redessiner() {
-		Color couleurFond = Themes.getThemeCourant().getBackground();
-		Color couleurTexte = Couleur.luminosite(Themes.getThemeCourant().getBackground()) < 128 ? Color.WHITE : Color.BLACK;
+	public void redraw() {
+		Color backgroundColor = Themes.getThemeCourant().getBackground();
+		Color textColor = ColorTools.getLuminosity(Themes.getThemeCourant().getBackground()) < 128 ? Color.WHITE : Color.BLACK;
 
-		setBackground(couleurFond);
-		setForeground(couleurTexte);
+		setBackground(backgroundColor);
+		setForeground(textColor);
 
 		for (Component j : getComponents()) {
-			// j.setForeground(couleurTexte);
-			// j.setBackground(couleurFond);
 			if (j instanceof JLabel)
-				((JLabel) j).setForeground(couleurTexte);
+				((JLabel) j).setForeground(textColor);
 		}
 	}
 }

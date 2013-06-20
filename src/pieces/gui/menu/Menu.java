@@ -12,7 +12,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JPanel;
 
-import pieces.gui.utils.Couleur;
+import pieces.gui.utils.ColorTools;
 import pieces.gui.utils.Themes;
 
 
@@ -81,29 +81,29 @@ public class Menu extends JPanel {
 		Graphics2D g2d = (Graphics2D) g;
 
 		Color background = Themes.getThemeCourant().getBackground();
-		Color couleur = Couleur.couleurTexte(background);
+		Color couleur = ColorTools.getTextColor(background);
 
 		// Antialiasing.
 		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 
 		if (etat == HOVER) {
 			g2d.setColor(Color.black);
-			GradientPaint gp = new GradientPaint(0, 0, Couleur.eclaircir(background, 30), 0, getHeight(), background);
+			GradientPaint gp = new GradientPaint(0, 0, ColorTools.brighten(background, 30), 0, getHeight(), background);
 
 			g2d.setPaint(gp);
 			g2d.fillRect(0, 0, getWidth(), getHeight());
 
-			g2d.setColor(Couleur.assombrir(background, 20));
+			g2d.setColor(ColorTools.darken(background, 20));
 			g2d.drawLine(0, 0, 0, getHeight());
 			g2d.drawLine(getWidth() - 1, 0, getWidth() - 1, getHeight());
 		} else if (etat == PRESSED) {
 			g2d.setColor(Color.black);
-			GradientPaint gp = new GradientPaint(0, 0, Couleur.assombrir(background, 150), 0, getHeight(), Couleur.assombrir(background, 50));
+			GradientPaint gp = new GradientPaint(0, 0, ColorTools.darken(background, 150), 0, getHeight(), ColorTools.darken(background, 50));
 
 			g2d.setPaint(gp);
 			g2d.fillRect(0, 0, getWidth(), getHeight());
 
-			g2d.setColor(Couleur.assombrir(background, 100));
+			g2d.setColor(ColorTools.darken(background, 100));
 			g2d.drawLine(0, 0, 0, getHeight());
 			g2d.drawLine(getWidth() - 1, 0, getWidth() - 1, getHeight());
 		}
@@ -111,11 +111,11 @@ public class Menu extends JPanel {
 		// Texte.
 		g2d.setFont(new Font(Font.SANS_SERIF, Font.BOLD, TAILLE));
 
-		g2d.setColor(Couleur.eclaircir(background, 20));
+		g2d.setColor(ColorTools.brighten(background, 20));
 		g2d.drawString(texte, MARGE * 2, TAILLE + MARGE + 1);
 
-		if (etat != PRESSED && Couleur.luminosite(background) < 128) {
-			g2d.setColor(Couleur.assombrir(background, 150));
+		if (etat != PRESSED && ColorTools.getLuminosity(background) < 128) {
+			g2d.setColor(ColorTools.darken(background, 150));
 			g2d.drawString(texte, MARGE * 2, TAILLE + MARGE - 1);
 		}
 

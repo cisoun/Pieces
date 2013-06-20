@@ -15,7 +15,7 @@ import javax.swing.JPanel;
 
 import pieces.Game;
 import pieces.gui.utils.Bank;
-import pieces.gui.utils.Couleur;
+import pieces.gui.utils.ColorTools;
 import pieces.gui.utils.Themes;
 import pieces.utils.Matrix.MatrixPiece;
 
@@ -65,7 +65,7 @@ public class Scores extends JPanel {
 				RenderingHints.VALUE_ANTIALIAS_ON);
 		
 		// Fond.
-		GradientPaint gp = new GradientPaint(0, 0, background, 0, getHeight(),Couleur.assombrir(background, 50));
+		GradientPaint gp = new GradientPaint(0, 0, background, 0, getHeight(),ColorTools.darken(background, 50));
 		
 
 		g2d.setPaint(gp);
@@ -78,23 +78,23 @@ public class Scores extends JPanel {
 		g2d.drawLine(0, 1, getWidth(), 1);
 
 		// Texte.
-		String texte = reversi.matrice.score(MatrixPiece.NOIR) + " - " + reversi.matrice.score(MatrixPiece.BLANC);
+		String texte = reversi.getMatrix().score(MatrixPiece.BLACK) + " - " + reversi.getMatrix().score(MatrixPiece.WHITE);
 		int texteLargeur = fontMetrics.stringWidth(texte);
 		int texteHauteur = fontMetrics.getHeight();
 		int texteX = getWidth() / 2 - texteLargeur / 2;
 		int texteY = getHeight() / 2 - texteHauteur / 2 + 40;
-		GradientPaint gpTexte = new GradientPaint(0, 0, Couleur.assombrir(background, 20), 0, texteHauteur, Couleur.assombrir(background, 70));
-		Color couleur = Couleur.luminosite(background) < 128 ? background.brighter() : background.darker();
+		GradientPaint gpTexte = new GradientPaint(0, 0, ColorTools.darken(background, 20), 0, texteHauteur, ColorTools.darken(background, 70));
+		Color couleur = ColorTools.getLuminosity(background) < 128 ? background.brighter() : background.darker();
 		
 		
 		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
 		g2d.setFont(police);
 		
-		g2d.setColor(Couleur.eclaircir(background, 30));
+		g2d.setColor(ColorTools.brighten(background, 30));
 		g2d.drawString(texte, texteX, texteY + 1);
 		
-		g2d.setColor(Couleur.assombrir(background, 70));
+		g2d.setColor(ColorTools.darken(background, 70));
 		g2d.drawString(texte, texteX, texteY - 1);
 		
 		g2d.setColor(background.brighter());

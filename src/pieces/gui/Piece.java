@@ -54,7 +54,7 @@ public class Piece extends JPanel {
 		return this.coordonnees;
 	}
 
-	public boolean isRetourne() {
+	public boolean isReversed() {
 		return retourne;
 	}
 
