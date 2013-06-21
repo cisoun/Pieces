@@ -244,7 +244,7 @@ public class Game extends UnicastRemoteObject implements IClient {
 					gui.play(piece);
 				}
 			} catch (RemoteException e) {
-				message("Erreur lors de la transmission du coup.", Message.ERROR, false, true);
+				message("Problem occurred with the network !", Message.ERROR, false, true);
 				e.printStackTrace();
 			}
 		}
@@ -273,7 +273,7 @@ public class Game extends UnicastRemoteObject implements IClient {
 					// Plays if possible.
 					if (matrix.getAvailableMoves().size() > 0) {
 						int index = AI.play(matrix, playerAI.getType() - 1);
-						matrix.set(index, playerAI.getType());
+						matrix.set(index, player ? MatrixPiece.WHITE : MatrixPiece.BLACK);
 						gui.play(index);
 						play(index);
 					} else {

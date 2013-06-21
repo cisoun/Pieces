@@ -250,6 +250,9 @@ public class GUI extends JFrame {
 	}
 
 	public void play(int piece) {
+		System.out.println("MATRIX");
+		System.out.println(game.getMatrix().toString());
+		System.out.println("ENDMATRIX");
 		grid.put(piece, game.round());
 	}
 
