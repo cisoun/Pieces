@@ -6,6 +6,7 @@ import java.awt.Component;
 import java.awt.Graphics;
 import java.io.IOException;
 import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -96,6 +97,8 @@ public class GUI extends JFrame {
 		revalidate();
 		repaint();
 
+		ImageIcon icon = new ImageIcon("icon.png");
+		setIconImage(icon.getImage());
 		setTitle(Game.APP_NAME);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setSize(600, 600);

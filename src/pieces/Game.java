@@ -72,12 +72,11 @@ public class Game extends UnicastRemoteObject implements IClient {
 		round = !round;
 
 		// Terminates the game if matrix is full.
-		if (matrix.isFull())
-		{
+		if (matrix.isFull()) {
 			end(true);
 			return;
 		}
-		
+
 		/**
 		 * FIX ME
 		 */
@@ -121,8 +120,7 @@ public class Game extends UnicastRemoteObject implements IClient {
 
 	}
 
-	public Matrix getMatrix()
-	{
+	public Matrix getMatrix() {
 		return matrix;
 	}
 
@@ -144,7 +142,7 @@ public class Game extends UnicastRemoteObject implements IClient {
 	public void login() {
 		// Tell the player to wait.
 		message("Awaiting connection...", Message.WARNING, true, true);
-	
+
 		// Try to reach the remote game.
 		try {
 			Network.login(this);
@@ -155,14 +153,14 @@ public class Game extends UnicastRemoteObject implements IClient {
 			message("Cannot join this game.", Message.ERROR, false, true);
 			e.printStackTrace();
 		}
-	
+
 		// If ok, create a new game.
 		newGame();
 		gui.multiplayer();
 		round = false;
 		multiplayer = true;
 		player = Player.WHITE; // Client plays as white.
-	
+
 		// Notify the player.
 		message("Connection established !", Message.OK, false, true);
 	}
@@ -214,7 +212,7 @@ public class Game extends UnicastRemoteObject implements IClient {
 		round = false;
 		playerBlack.reset();
 		playerWhite.reset();
-		
+
 		matrix.reset();
 		matrix.set(3, 3, MatrixPiece.WHITE);
 		matrix.set(4, 3, MatrixPiece.BLACK);
@@ -228,27 +226,30 @@ public class Game extends UnicastRemoteObject implements IClient {
 		if (multiplayer)
 			return;
 		updatePlayers();
-		//if (playerBlack.isAI())
-		//	runAI(Player.BLACK);
 	}
 
 	@Override
 	public void play(int piece) {
 		int type = round() ? MatrixPiece.WHITE : MatrixPiece.BLACK;
-		matrix.play(piece, type);
-	
+
 		if (multiplayer) {
 			try {
-				// Si c'est notre tour, avertir le serveur du coup.
+				// If it's our turn, notify the server about our game.
 				if (canPlay())
 					Network.putPiece(piece);
-				else
+				else {
+					matrix.set(piece, type); // Need by gui.play() but
+												// matrix.play() do it again
+												// later... Meh.
 					gui.play(piece);
+				}
 			} catch (RemoteException e) {
 				message("Erreur lors de la transmission du coup.", Message.ERROR, false, true);
 				e.printStackTrace();
 			}
 		}
+
+		matrix.play(piece, type);
 		changeRound();
 	}
 
@@ -272,6 +273,7 @@ public class Game extends UnicastRemoteObject implements IClient {
 					// Plays if possible.
 					if (matrix.getAvailableMoves().size() > 0) {
 						int index = AI.play(matrix, playerAI.getType() - 1);
+						matrix.set(index, playerAI.getType());
 						gui.play(index);
 						play(index);
 					} else {

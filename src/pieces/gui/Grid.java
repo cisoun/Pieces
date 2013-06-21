@@ -217,10 +217,10 @@ public class Grid extends JPanel {
 			return;
 
 		// Count number of pieces to analyze.
-		int pieces = game.getMatrix().distance(piece, neighbor);
+		int distance = game.getMatrix().distance(piece, neighbor);
 
 		// Reverse pieces.
-		for (int j = 1; j <= pieces; j++)
+		for (int j = 1; j <= distance; j++)
 			reverse(x + (horizontalDirection * j), y + (verticalDirection * j), DELTA * j);
 	}
 
