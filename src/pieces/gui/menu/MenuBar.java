@@ -12,23 +12,20 @@ import javax.swing.JPanel;
 import pieces.gui.utils.ColorTools;
 import pieces.gui.utils.Themes;
 
-
-
 public class MenuBar extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private boolean flat;
-	
+
 	public MenuBar() {
 		super();
 
-		setBackground(Themes.getThemeCourant().getBackground());
+		setBackground(Themes.getCurrentTheme().getBackground());
 		setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
 
 		setPreferredSize(new Dimension(getWidth(), Menu.getHauteur() + 2));
 	}
-	
-	public MenuBar(boolean flat)
-	{
+
+	public MenuBar(boolean flat) {
 		this();
 		this.flat = flat;
 	}
@@ -41,14 +38,13 @@ public class MenuBar extends JPanel {
 	protected void paintComponent(Graphics g) {
 		Graphics2D g2d = (Graphics2D) g;
 
-		Color background = Themes.getThemeCourant().getBackground();
+		Color background = Themes.getCurrentTheme().getBackground();
 		Color backgroundDark = ColorTools.darken(background, 20);
 
-		//setPreferredSize(new Dimension(getWidth(), Menu.getHauteur() + 2));
-
+		// Antialiasing
 		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-		// Fond.
+		// Background
 		GradientPaint gp = new GradientPaint(0, 0, flat ? backgroundDark : background, 0, getHeight(), ColorTools.darken(background, 20));
 
 		g2d.setPaint(gp);

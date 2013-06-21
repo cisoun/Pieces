@@ -12,9 +12,10 @@ public class Config {
 	private static Preferences preferences;
 	public static final String SHOW_MOVES = "show_moves";
 	public static final String SHOW_GRID = "show_grid";
-	public static final String END_ANIMATION = "end_animation";
+	public static final String ENDING_ANIMATION = "final_animation";
 	public static final String DIFFICULTY_BLACK = "difficulty_black";
 	public static final String DIFFICULTY_WHITE = "difficulty_white";
+	public static final String AI_SPEED = "ai_speed";
 	public static final String PORT = "multiplayer_port";
 	public static final String SERVER = "multiplayer_server";
 	public static final String THEME = "theme";

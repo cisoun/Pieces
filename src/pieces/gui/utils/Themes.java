@@ -9,25 +9,30 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+import java.util.TreeMap;
 
 import javax.swing.JOptionPane;
+import pieces.Game;
 
+/**
+ * Visual themes manager.
+ * 
+ * @author Cyriaque Skrapits
+ * 
+ */
 public class Themes {
-	public static final String CHEMIN = "themes";
+	public static final String PATH = "themes";
 	public static final Color BACKGROUND = SystemColor.window;
 	public static final Color GRID_BACKGROUND = SystemColor.window;
 	public static final Color GRID_LINES = SystemColor.window.brighter();
 	public static final Color GRID_HINT = ColorTools.darken(GRID_BACKGROUND, 20);
-	
-	private static HashMap<String, Theme> _themes = new HashMap<String, Theme>();
-	private static ArrayList<String> themesDisponibles = new ArrayList<String>();
-	private static String[] fichiers = {"theme.properties", "sequence.png", "background.png"};
-	private static String themeCourant = "Pieces";
-	
+
+	private static TreeMap<String, Theme> themes = new TreeMap<String, Theme>();
+	private static String[] files = { "theme.properties", "sequence.png", "background.png" };
+	private static String currentTheme = "Pieces";
+
 	public static class Theme {
 		private String name;
 		private Color background;
@@ -35,166 +40,140 @@ public class Themes {
 		private Color gridHint;
 		private Color gridLines;
 		private VolatileImage backgroundImage;
-		
+
 		Properties properties = new Properties();
-		
-		public Theme(String name)
-		{
+
+		public Theme(String name) {
 			this.name = name;
 			if (hasBackgroundImage())
-				this.backgroundImage = Graphics.loadFromFile(CHEMIN + "/" + this.name + "/background.png");
+				this.backgroundImage = Graphics.loadFromFile(PATH + "/" + this.name + "/background.png");
 
 			try {
-				properties.load(new FileInputStream(CHEMIN + "/" + name + "/theme.properties"));
+				properties.load(new FileInputStream(PATH + "/" + name + "/theme.properties"));
 				this.background = getPropriete("background", BACKGROUND);
 				this.gridBackground = getPropriete("grid_background", GRID_BACKGROUND);
 				this.gridHint = getPropriete("grid_hint", GRID_HINT);
 				this.gridLines = getPropriete("grid_lines", GRID_LINES);
 			} catch (IOException e) {
-				JOptionPane.showMessageDialog(null, "Pas de thème utilisable...\rAbandon.", "Pieces", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(null, "No theme found...\rAborted.", Game.APP_NAME, JOptionPane.ERROR_MESSAGE);
 				e.printStackTrace();
 			}
 		}
-		
-		private Color getPropriete(String cle, Color defaut)
-		{
+
+		private Color getPropriete(String cle, Color defaut) {
 			return ColorTools.toColor(properties.getProperty(cle, ColorTools.toHex(defaut)));
 		}
-		
-		public Color getBackground()
-		{
+
+		public Color getBackground() {
 			return this.background;
 		}
-		
-		public Color getGridBackground()
-		{
+
+		public Color getGridBackground() {
 			return this.gridBackground;
 		}
-		
-		public VolatileImage getGridBackgroundImage()
-		{
+
+		public VolatileImage getGridBackgroundImage() {
 			return this.backgroundImage;
 		}
-		
-		public Color getGridHint()
-		{
+
+		public Color getGridHint() {
 			return this.gridHint;
 		}
-		
-		public Color getGridLines()
-		{
+
+		public Color getGridLines() {
 			return this.gridLines;
 		}
-		
-		public String getName()
-		{
+
+		public String getName() {
 			return this.name;
 		}
-		
-		public String getSequencePath()
-		{
+
+		public String getSequencePath() {
 			return "themes/" + this.name + "/sequence.png";
 		}
-		
-		public boolean hasBackgroundImage()
-		{
-			File dossier = new File(CHEMIN + "/" + this.name);
+
+		public boolean hasBackgroundImage() {
+			File dossier = new File(PATH + "/" + this.name);
 			List<String> liste = Arrays.asList(dossier.list());
 			return liste.contains("background.png");
 		}
 	};
-	
-	public static void chargerThemes()
-	{
-		themesDisponibles.clear();
-	
-		File[] dossiers;
-		File dossierThemes = new File(CHEMIN);
-		dossiers = dossierThemes.listFiles();
-		FileFilter fileFilter = new FileFilter() {
-		    @Override
-			public boolean accept(File fichier) {
-		        return fichier.isDirectory();
-		    }
-		};
-		dossiers = dossierThemes.listFiles(fileFilter);
-		
-		for(File f:dossiers)
-		{
-			if (estValide(f.getName()))
-				themesDisponibles.add(f.getName());
-		}
-		
-		Collections.sort(themesDisponibles);
-	}
 
-	public static boolean estValide(String theme)
-	{
-		File dossier = new File(CHEMIN + "/" + theme);
-		List<String> liste = Arrays.asList(dossier.list());
-		if (liste.contains(fichiers[0]) && liste.contains(fichiers[1]))
-			return true;
-		return false;
-	}
-	
-	public static boolean existeTheme(String theme)
-	{
-		if (themesDisponibles == null)
-			chargerThemes();
+	public static boolean existsTheme(String theme) {
+		if (themes == null)
+			load();
 
-		for (int i = 0; i < themesDisponibles.size(); i++)
-		{
-			if (themesDisponibles.get(i) == theme)
+		for (int i = 0; i < themes.size(); i++) {
+			if (themes.get(i).getName() == theme)
 				return true;
 		}
 
 		return false;
 	}
-	
-	public static String[] getNomThemes()
-	{
-		if (themesDisponibles == null)
-			chargerThemes();
 
-		String[] liste = new String[themesDisponibles.size()];
-		liste = themesDisponibles.toArray(liste);
-		return liste;
+	public static Theme getCurrentTheme() {
+		return getTheme(currentTheme);
 	}
 
-	public static Theme getTheme(String theme)
-	{
-		// Si le thème existe déjà, le récupérer.
-		if (_themes.containsKey(theme))
-			return _themes.get(theme);
-	
-		// Autrement le créer.
-		Theme t = new Theme(theme);
-		_themes.put(theme, t);
-		return t;
-	}
-
-	public static Theme getThemeCourant()
-	{
-		if (!_themes.containsKey(themeCourant))
-			return getTheme(themeCourant);
-		return _themes.get(themeCourant);
-	}
-	
-	public static int getThemeIndex(String theme)
-	{
-		if (themesDisponibles.contains(theme))
-			return themesDisponibles.indexOf(theme);
+	public static int getThemeIndex(String theme) {
+		List<String> liste = new ArrayList<String>(themes.keySet());
+		if (themes.containsKey(theme))
+			return liste.indexOf(theme);
 		else
 			return -1;
 	}
 
-	public int nombreThemes()
-	{
-		return Themes.themesDisponibles.size();
+	public int getNumberOfThemes() {
+		return Themes.themes.size();
 	}
+
+	public static Theme getTheme(String theme) {
+		// If theme already exists, get it.
+		if (themes.containsKey(theme) && themes.get(theme) != null)
+			return themes.get(theme);
 	
-	public static void setThemeCourant(String theme)
-	{
-		themeCourant = theme;
+		// Otherwise, create it.
+		Theme t = new Theme(theme);
+		themes.put(theme, t);
+		return t;
+	}
+
+	public static String[] getThemesName() {
+		if (themes == null)
+			load();
+	
+		return themes.keySet().toArray(new String[themes.size()]);
+	}
+
+	public static boolean isTheme(String theme) {
+		File dossier = new File(PATH + "/" + theme);
+		List<String> liste = Arrays.asList(dossier.list());
+		if (liste.contains(files[0]) && liste.contains(files[1]))
+			return true;
+		return false;
+	}
+
+	public static void load() {
+		themes.clear();
+	
+		File[] folders;
+		File foldersTheme = new File(PATH);
+		folders = foldersTheme.listFiles();
+		FileFilter fileFilter = new FileFilter() {
+			@Override
+			public boolean accept(File fichier) {
+				return fichier.isDirectory();
+			}
+		};
+		folders = foldersTheme.listFiles(fileFilter);
+	
+		for (File f : folders) {
+			if (isTheme(f.getName()))
+				themes.put(f.getName(), null);
+		}
+	}
+
+	public static void setCurrentTheme(String theme) {
+		currentTheme = theme;
 	}
 }

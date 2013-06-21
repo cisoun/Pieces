@@ -5,15 +5,13 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
-import com.sun.xml.internal.ws.api.pipe.NextAction;
-
 import pieces.gui.GUI;
 import pieces.gui.Message;
 import pieces.network.IClient;
 import pieces.network.IServer.ServerFullException;
 import pieces.network.Network;
 import pieces.utils.Config;
-import pieces.utils.IA;
+import pieces.utils.AI;
 import pieces.utils.Matrix;
 import pieces.utils.Player;
 import pieces.utils.Matrix.MatrixPiece;
@@ -35,14 +33,15 @@ public class Game extends UnicastRemoteObject implements IClient {
 	private boolean round;
 	private boolean multiplayer;
 	private boolean player;
+	private boolean gameover;
 
 	public Game() throws RemoteException {
 		// Matrix.
 		matrix = new Matrix(RANGE);
 
 		// Players.
-		playerBlack = new Player(Player.BLACK, Player.TYPE_HUMAIN);
-		playerWhite = new Player(Player.BLACK, Player.TYPE_AI1);
+		playerBlack = new Player(Player.TYPE_HUMAIN);
+		playerWhite = new Player(Player.TYPE_AI1);
 
 		// Graphical User Interface.
 		gui = new GUI(this);
@@ -51,92 +50,7 @@ public class Game extends UnicastRemoteObject implements IClient {
 		newGame();
 	}
 
-	public void afficherScores() {
-		gui.getScores().afficher();
-	}
-
-	public void changeRound() {
-		// Change round.
-		round = !round;
-
-		// Terminates the game if matrix is full.
-		if (matrix.isFull())
-		{
-			end();
-			return;
-		}
-		
-		/**
-		 * FIX ME
-		 */
-		// Search moves for the next player.
-		// If no move was found, pass.
-		if (searchMoves() == 0) {
-			round = !round; // Pass to the next round. This may be dirty.
-			// Check if the other player cannot play too.
-			if (searchMoves() == 0) {
-				end();
-				return;
-			}
-			round = !round; // Back to the previous round.
-			changeRound();
-		}
-
-		gui.changeRound();
-
-		// Let the AI plays if needed.
-		if (!multiplayer)
-			runAI(round);
-	}
-
-	public void end() {
-		int blackScore = matrix.score(MatrixPiece.BLACK);
-		int whiteScore = matrix.score(MatrixPiece.WHITE);
-
-		if (blackScore == whiteScore)
-			message("Match nul !", Message.WARNING, true, false);
-		else
-			message((blackScore > whiteScore ? "Blacks" : "Whites") + " won !", Message.OK, true, false);
-		gui.finalAnimation();
-	}
-
-	public int searchMoves() {
-		matrix.searchMoves(round ? MatrixPiece.WHITE : MatrixPiece.BLACK);
-		gui.repaint();
-		return matrix.movesAvailable.size();
-	}
-	
-	public Matrix getMatrix()
-	{
-		return matrix;
-	}
-
-	@Override
-	public void logout() {
-		multiplayer = false;
-		gui.multiplayer();
-		try {
-			Network.logout(player);
-			newGame();
-			message("La partie a été interrompue.", Message.WARNING, false, true);
-		} catch (RemoteException e) {
-			message("Une erreur est survenue lors de l'arrêt de la partie.", Message.ERROR, false, true);
-			e.printStackTrace();
-		}
-	}
-
-	@Override
-	public void handshake() {
-		message("Opponent connected !", Message.OK, false, true);
-		gui.revalidate();
-		gui.repaint();
-	}
-
-	public boolean isHote() {
-		return player;
-	}
-
-	public boolean isJouable() {
+	public boolean canPlay() {
 		if (multiplayer) {
 			try {
 				return round == player && Network.canPlay();
@@ -153,8 +67,118 @@ public class Game extends UnicastRemoteObject implements IClient {
 		}
 	}
 
+	public void changeRound() {
+		// Change round.
+		round = !round;
+
+		// Terminates the game if matrix is full.
+		if (matrix.isFull())
+		{
+			end(true);
+			return;
+		}
+		
+		/**
+		 * FIX ME
+		 */
+		// Search moves for the next player.
+		// If no move was found, pass.
+		if (searchMoves() == 0) {
+			round = !round; // Pass to the next round. This may be dirty.
+			// Check if the other player cannot play too.
+			if (searchMoves() == 0) {
+				end(false);
+				return;
+			}
+			round = !round; // Back to the previous round.
+			changeRound();
+		}
+
+		gui.changeRound();
+
+		// Let the AI plays if needed.
+		if (!multiplayer)
+			runAI(round);
+	}
+
+	public void end(boolean animation) {
+		// Prevents another round.
+		gameover = true;
+		matrix.clearMoves();
+
+		// Shows who's the winner.
+		int blackScore = matrix.score(MatrixPiece.BLACK);
+		int whiteScore = matrix.score(MatrixPiece.WHITE);
+
+		if (blackScore == whiteScore)
+			message("Draw.", Message.WARNING, true, false);
+		else
+			message((blackScore > whiteScore ? "Blacks" : "Whites") + " won !", Message.OK, true, false);
+
+		// Regroup all each piece if needed.
+		if (animation)
+			gui.endingAnimation();
+
+	}
+
+	public Matrix getMatrix()
+	{
+		return matrix;
+	}
+
+	@Override
+	public void handshake() {
+		message("Opponent connected !", Message.OK, false, true);
+		gui.revalidate();
+		gui.repaint();
+	}
+
+	public boolean isHost() {
+		return player;
+	}
+
 	public boolean isMultiplayer() {
 		return multiplayer;
+	}
+
+	public void login() {
+		// Tell the player to wait.
+		message("Awaiting connection...", Message.WARNING, true, true);
+	
+		// Try to reach the remote game.
+		try {
+			Network.login(this);
+		} catch (ServerFullException e) {
+			message("This host has already two players.", Message.ERROR, false, true);
+			e.printStackTrace();
+		} catch (RemoteException | NotBoundException e) {
+			message("Cannot join this game.", Message.ERROR, false, true);
+			e.printStackTrace();
+		}
+	
+		// If ok, create a new game.
+		newGame();
+		gui.multiplayer();
+		round = false;
+		multiplayer = true;
+		player = Player.WHITE; // Client plays as white.
+	
+		// Notify the player.
+		message("Connection established !", Message.OK, false, true);
+	}
+
+	@Override
+	public void logout() {
+		multiplayer = false;
+		gui.multiplayer();
+		try {
+			Network.logout(player);
+			newGame();
+			message("La partie a été interrompue.", Message.WARNING, false, true);
+		} catch (RemoteException e) {
+			message("Une erreur est survenue lors de l'arrêt de la partie.", Message.ERROR, false, true);
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -186,23 +210,46 @@ public class Game extends UnicastRemoteObject implements IClient {
 
 		stopAI();
 
+		gameover = false;
+		round = false;
+		playerBlack.reset();
+		playerWhite.reset();
+		
 		matrix.reset();
 		matrix.set(3, 3, MatrixPiece.WHITE);
 		matrix.set(4, 3, MatrixPiece.BLACK);
 		matrix.set(3, 4, MatrixPiece.BLACK);
 		matrix.set(4, 4, MatrixPiece.WHITE);
 
-		round = false;
-		playerBlack.reset();
-		playerWhite.reset();
-
-		gui.nouvellePartie();
+		gui.newGame();
 
 		matrix.searchMoves(MatrixPiece.BLACK);
 
 		if (multiplayer)
 			return;
 		updatePlayers();
+		//if (playerBlack.isAI())
+		//	runAI(Player.BLACK);
+	}
+
+	@Override
+	public void play(int piece) {
+		int type = round() ? MatrixPiece.WHITE : MatrixPiece.BLACK;
+		matrix.play(piece, type);
+	
+		if (multiplayer) {
+			try {
+				// Si c'est notre tour, avertir le serveur du coup.
+				if (canPlay())
+					Network.putPiece(piece);
+				else
+					gui.play(piece);
+			} catch (RemoteException e) {
+				message("Erreur lors de la transmission du coup.", Message.ERROR, false, true);
+				e.printStackTrace();
+			}
+		}
+		changeRound();
 	}
 
 	private void runAI(final boolean player) {
@@ -216,14 +263,15 @@ public class Game extends UnicastRemoteObject implements IClient {
 			return;
 
 		// Plays.
+		final int delta = DELTA * (Config.get(Config.AI_SPEED, 0) + 1);
 		threadAI = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					Thread.sleep(DELTA);
+					Thread.sleep(delta);
 					// Plays if possible.
-					if (matrix.movesAvailable.size() > 0) {
-						int index = IA.bestMove(matrix, matrix.movesAvailable, playerAI.getType() - 1);
+					if (matrix.getAvailableMoves().size() > 0) {
+						int index = AI.play(matrix, playerAI.getType() - 1);
 						gui.play(index);
 						play(index);
 					} else {
@@ -247,60 +295,25 @@ public class Game extends UnicastRemoteObject implements IClient {
 			threadAI.interrupt();
 	}
 
-	@Override
-	public void play(int piece) {
-		int type = tour() ? MatrixPiece.WHITE : MatrixPiece.BLACK;
-		matrix.play(piece, type);
-
-		if (multiplayer) {
-			try {
-				// Si c'est notre tour, avertir le serveur du coup.
-				if (isJouable())
-					Network.putPiece(piece);
-				else
-					gui.play(piece);
-			} catch (RemoteException e) {
-				message("Erreur lors de la transmission du coup.", Message.ERROR, false, true);
-				e.printStackTrace();
-			}
-		}
-		changeRound();
-	}
-
-	public void login() {
-		// Tell the player to wait.
-		message("Awaiting connection...", Message.WARNING, true, true);
-
-		// Try to reach the remote game.
-		try {
-			Network.login(this);
-		} catch (ServerFullException e) {
-			message("This host has already two players.", Message.ERROR, false, true);
-			e.printStackTrace();
-		} catch (RemoteException | NotBoundException e) {
-			message("Cannot join this game.", Message.ERROR, false, true);
-			e.printStackTrace();
-		}
-
-		// If ok, create a new game.
-		newGame();
-		gui.multiplayer();
-		round = false;
-		multiplayer = true;
-		player = Player.WHITE; // Client plays as white.
-
-		// Notify the player.
-		message("Connection established !", Message.OK, false, true);
-	}
-
-	public boolean tour() {
+	public boolean round() {
 		return round;
+	}
+
+	public int searchMoves() {
+		matrix.searchMoves(round ? MatrixPiece.WHITE : MatrixPiece.BLACK);
+		gui.repaint();
+		return matrix.getAvailableMoves().size();
 	}
 
 	public void updatePlayers() {
 		playerBlack.setType(Config.get(Config.DIFFICULTY_BLACK, Player.TYPE_HUMAIN));
 		playerWhite.setType(Config.get(Config.DIFFICULTY_WHITE, Player.TYPE_AI1));
 		gui.repaint();
-		runAI(round);
+		if (!gameover)
+			runAI(round);
+	}
+
+	public void updateScores() {
+		gui.getScores().update();
 	}
 }

@@ -27,10 +27,10 @@ import pieces.gui.utils.Themes;
 import pieces.gui.utils.Bank.SequenceNotFoundException;
 import pieces.utils.Config;
 
-
 public class Options extends JPanel {
+	private static final long serialVersionUID = 1L;
 
-	private final Font FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 11);
+	//private final Font FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 11);
 	private final Font FONT_TITLE = new Font(Font.SANS_SERIF, Font.BOLD, 12);
 	private final String TITLE = "OPTIONS";
 	private final int MARGIN_TITLE = 1;
@@ -42,19 +42,22 @@ public class Options extends JPanel {
 	private JLabel lblAppearanceTheme;
 	private JLabel lblGameBlackPlayer;
 	private JLabel lblGameWhitePlayer;
-	private JCheckBox cbGameFinalAnimation;
+	private JLabel lblGameAISpeed;
+	private JCheckBox cbGameEndingAnimation;
 	private JCheckBox cbAppearanceShowGrid;
 	private JCheckBox cbAppearanceShowMoves;
 	private JComboBox<String> cboAppearanceTheme;
 	private JComboBox<String> cboGameBlackPlayer;
 	private JComboBox<String> cboGameWhitePlayer;
+	private JComboBox<String> cboGameAISpeed;
 
 	private int titleWidth;
 	private int titleHeight;
 
 	private String[] difficulties = new String[] { "Human", "Easy", "Medium", "Hard" };
+	private String[] aiSpeeds = new String[] { "Fast", "Normal", "Slow" };
 
-	private boolean cache = true;
+	private boolean toggled = true;
 
 	public Options(Game game, GUI gui) {
 
@@ -74,43 +77,50 @@ public class Options extends JPanel {
 
 		// Options
 		cbAppearanceShowGrid = new JCheckBox("Show grid");
-		//cbApparenceAfficherGrille.setFont(POLICE);
+		// cbApparenceAfficherGrille.setFont(POLICE);
 		cbAppearanceShowGrid.setOpaque(false);
 		cbAppearanceShowGrid.setSelected(Config.get(Config.SHOW_GRID, true));
-		cbAppearanceShowGrid.addActionListener(alAfficherGrille);
+		cbAppearanceShowGrid.addActionListener(alShowGrid);
 
 		cbAppearanceShowMoves = new JCheckBox("Show moves");
-		//cbApparenceCasesPossibles.setFont(POLICE);
+		// cbApparenceCasesPossibles.setFont(POLICE);
 		cbAppearanceShowMoves.setOpaque(false);
 		cbAppearanceShowMoves.setSelected(Config.get(Config.SHOW_MOVES, false));
-		cbAppearanceShowMoves.addActionListener(alCoupsPossibles);
+		cbAppearanceShowMoves.addActionListener(alShowMoves);
 
 		lblAppearanceTheme = new JLabel("Visual theme : ");
-		//lblApparenceTheme.setFont(POLICE);
+		// lblApparenceTheme.setFont(POLICE);
 
-		cboAppearanceTheme = new JComboBox<String>(Themes.getNomThemes());
+		cboAppearanceTheme = new JComboBox<String>(Themes.getThemesName());
 		cboAppearanceTheme.setOpaque(false);
 		cboAppearanceTheme.setSelectedIndex(Themes.getThemeIndex(Config.get(Config.THEME, "Default")));
 		cboAppearanceTheme.addActionListener(alThemes);
 
-		cbGameFinalAnimation = new JCheckBox("Reverse pieces at the end");
-		cbGameFinalAnimation.setOpaque(false);
-		cbGameFinalAnimation.setSelected(Config.get(Config.END_ANIMATION, false));
-		cbGameFinalAnimation.addActionListener(alRetournementFin);
+		cbGameEndingAnimation = new JCheckBox("Ending animation");
+		cbGameEndingAnimation.setOpaque(false);
+		cbGameEndingAnimation.setSelected(Config.get(Config.ENDING_ANIMATION, false));
+		cbGameEndingAnimation.addActionListener(alEndingAnimation);
 
 		lblGameBlackPlayer = new JLabel("Black player : ");
 
 		cboGameBlackPlayer = new JComboBox<String>(difficulties);
 		cboGameBlackPlayer.setOpaque(false);
 		cboGameBlackPlayer.setSelectedIndex(Integer.valueOf(Config.get(Config.DIFFICULTY_BLACK, "0")));
-		cboGameBlackPlayer.addActionListener(alDifficulteNoir);
+		cboGameBlackPlayer.addActionListener(alBlackDifficulty);
 
 		lblGameWhitePlayer = new JLabel("White player : ");
 
 		cboGameWhitePlayer = new JComboBox<String>(difficulties);
 		cboGameWhitePlayer.setOpaque(false);
 		cboGameWhitePlayer.setSelectedIndex(Integer.valueOf(Config.get(Config.DIFFICULTY_WHITE, "0")));
-		cboGameWhitePlayer.addActionListener(alDifficulteBlanc);
+		cboGameWhitePlayer.addActionListener(alWhiteDifficulty);
+
+		lblGameAISpeed = new JLabel("AI speed : ");
+
+		cboGameAISpeed = new JComboBox<String>(aiSpeeds);
+		cboGameAISpeed.setOpaque(false);
+		cboGameAISpeed.setSelectedIndex(Integer.valueOf(Config.get(Config.AI_SPEED, "0")));
+		cboGameAISpeed.addActionListener(alAISpeed);
 
 		// Layout
 		setLayout(new GridBagLayout());
@@ -158,7 +168,7 @@ public class Options extends JPanel {
 		add(Box.createVerticalStrut(10), gbc);
 
 		gbc.gridy = y++;
-		add(cbGameFinalAnimation, gbc);
+		add(cbGameEndingAnimation, gbc);
 
 		gbc.gridwidth = 1;
 		gbc.gridx = 0;
@@ -167,7 +177,7 @@ public class Options extends JPanel {
 
 		gbc.gridx = 1;
 		add(cboGameBlackPlayer, gbc);
-		
+
 		gbc.gridwidth = 1;
 		gbc.gridx = 0;
 		gbc.gridy = y++;
@@ -176,17 +186,24 @@ public class Options extends JPanel {
 		gbc.gridx = 1;
 		add(cboGameWhitePlayer, gbc);
 
+		gbc.gridx = 0;
+		gbc.gridy = y++;
+		add(lblGameAISpeed, gbc);
+
+		gbc.gridx = 1;
+		add(cboGameAISpeed, gbc);
+
 		setPreferredSize(new Dimension(0, getHeight()));
 		setBorder(BorderFactory.createEmptyBorder(10, 50, 10, 10));
 
-		redessiner();
+		redraw();
 	}
 
-	public void afficher() {
+	public void toggle() {
 		Thread animation = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				boolean c = cache;
+				boolean c = toggled;
 				for (int i = 0; i <= 10; i++) {
 					int x = (int) (Math.abs((c ? 1.0 : 0.0) - (Ease.InOutSine(i, 0, 1, 10))) * 300);
 					setPreferredSize(new Dimension(x, getHeight()));
@@ -202,11 +219,11 @@ public class Options extends JPanel {
 		});
 		animation.start();
 
-		cache = !cache;
+		toggled = !toggled;
 	}
 
-	public boolean isCache() {
-		return cache;
+	public boolean isToggled() {
+		return toggled;
 	}
 
 	@Override
@@ -215,21 +232,14 @@ public class Options extends JPanel {
 		super.paintComponent(g);
 		Graphics2D g2d = (Graphics2D) g;
 
-		// Anti-aliasing.
+		// Antialiasing
 		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-		// Ombre.
-		// GradientPaint gp = new GradientPaint(0, 0, reversi.getBackground(),
-		// 10, 0,Couleur.assombrir(reversi.getBackground(), 20));
-		// g2d.setPaint(gp);
-		// g2d.fillRect(0, 0, 10, getHeight());
-
-		// Titre.
+		// Title
 		g2d.setColor(ColorTools.darken(gui.getBackground(), 20));
 		g2d.fillRect(MARGIN_TITLE, 0, titleWidth + 20, getHeight());
 
 		g2d.setColor(new Color(50, 50, 50));
-		// g2d.fillRect(0, 20, titreLargeur + 20, titreHauteur + 20);
 		g2d.fillRect(MARGIN_TITLE, 0, titleWidth + 20, getHeight());
 
 		g2d.translate(MARGIN_TITLE + titleWidth + 7, titleHeight + 25);
@@ -241,64 +251,58 @@ public class Options extends JPanel {
 
 		g2d.rotate(Math.toRadians(90));
 		g2d.translate(-MARGIN_TITLE - titleWidth - 7, -titleHeight - 25);
-
-		// Bordure.
-		// g2d.setColor(Themes.getThemeCourant().getBackground());
-		// g2d.drawLine(MARGE_TITRE, 0, MARGE_TITRE, getHeight());
 	}
 
-	ActionListener alAfficherGrille = new ActionListener() {
+	ActionListener alShowGrid = new ActionListener() {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			boolean selectionne = cbAppearanceShowGrid.isSelected();
 			Config.set(Config.SHOW_GRID, selectionne);
 			cbAppearanceShowGrid.setSelected(selectionne);
-			gui.getGrille().repaint();
+			gui.getGrid().repaint();
 		}
 	};
 
-	ActionListener alCoupsPossibles = new ActionListener() {
+	ActionListener alShowMoves = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			boolean selectionne = cbAppearanceShowMoves.isSelected();
 			Config.set(Config.SHOW_MOVES, selectionne);
 			cbAppearanceShowMoves.setSelected(selectionne);
 			cbAppearanceShowMoves.repaint();
-			gui.getGrille().repaint();
+			gui.getGrid().repaint();
 		}
 	};
 
 	ActionListener alThemes = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			String nom = cboAppearanceTheme.getItemAt(cboAppearanceTheme.getSelectedIndex()).toString();
-			// boolean valide =
-			// Themes.estValide(cboThemes.getItemAt(cboThemes.getSelectedIndex()).toString());
-			Config.set(Config.THEME, nom);
+			String theme = cboAppearanceTheme.getItemAt(cboAppearanceTheme.getSelectedIndex()).toString();
+			Config.set(Config.THEME, theme);
 
-			Themes.setThemeCourant(nom);
+			Themes.setCurrentTheme(theme);
 			try {
-				gui.getBanque().chargerBanque(Themes.getThemeCourant().getSequencePath());
+				gui.getBank().load(Themes.getCurrentTheme().getSequencePath());
 			} catch (SequenceNotFoundException | IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			// Theme theme = Themes.getTheme(nom);
-			gui.redessiner();
-			redessiner();
+			gui.redraw();
+			redraw();
 		}
 	};
 
-	ActionListener alRetournementFin = new ActionListener() {
+	ActionListener alEndingAnimation = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			boolean selectionne = cbGameFinalAnimation.isSelected();
-			Config.set(Config.END_ANIMATION, selectionne);
+			boolean selectionne = cbGameEndingAnimation.isSelected();
+			Config.set(Config.ENDING_ANIMATION, selectionne);
 		}
 	};
 
-	ActionListener alDifficulteNoir = new ActionListener() {
+	ActionListener alBlackDifficulty = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			int index = cboGameBlackPlayer.getSelectedIndex();
@@ -307,7 +311,7 @@ public class Options extends JPanel {
 		}
 	};
 
-	ActionListener alDifficulteBlanc = new ActionListener() {
+	ActionListener alWhiteDifficulty = new ActionListener() {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			int index = cboGameWhitePlayer.getSelectedIndex();
@@ -316,16 +320,24 @@ public class Options extends JPanel {
 		}
 	};
 
-	private void redessiner() {
-		Color couleurFond = Themes.getThemeCourant().getBackground();
-		Color couleurTexte = ColorTools.getLuminosity(Themes.getThemeCourant().getBackground()) < 128 ? Color.WHITE : Color.BLACK;
+	ActionListener alAISpeed = new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			int index = cboGameAISpeed.getSelectedIndex();
+			Config.set(Config.AI_SPEED, String.valueOf(index));
+		}
+	};
 
-		setBackground(couleurFond);
-		setForeground(couleurTexte);
+	private void redraw() {
+		Color backgroundColor = Themes.getCurrentTheme().getBackground();
+		Color textColor = ColorTools.getTextColor(backgroundColor);
+
+		setBackground(backgroundColor);
+		setForeground(textColor);
 
 		for (Component j : getComponents()) {
-			j.setForeground(couleurTexte);
-			j.setBackground(couleurFond);
+			j.setForeground(textColor);
+			j.setBackground(backgroundColor);
 			if (j instanceof JCheckBox)
 				((JCheckBox) j).setRolloverEnabled(false);
 		}

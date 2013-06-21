@@ -18,22 +18,22 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		/*
-		 * Réglages pour performances graphiques.
+		 * Graphics settings.
 		 */
 		// Performances :
 		// http://www.oracle.com/technetwork/java/javase/tsg-desktop-150005.pdf
 		// System.setProperty("sun.java2d.opengl","true");
 		System.setProperty("sun.java2d.opengl.fbobject", "false");
 
-		// Log concernant l'accélération graphique effectuée sur le jeu après
-		// la fermeture du programme.
+		// Shows a log about graphic acceleration after the program has closed.
 		// System.setProperty("sun.java2d.trace", "count");
 
 		// Windows/DirectX
 		// System.setProperty("sun.java2d.translaccel", "true"); // DirectX
 
-		// Désactive l'utilisation de pixmaps.
-		System.setProperty("sun.java2d.pmoffscreen", "false");
+		// Disable pixmap use.
+		// This option may be useless but can improve a little the animations.
+		//System.setProperty("sun.java2d.pmoffscreen", "false");
 
 		/*
 		 * Look'n'feel.
@@ -55,7 +55,7 @@ public class Main {
 		 * Let's launch the game.
 		 */
 		try {
-			Game game = new Game();
+			new Game();
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}

@@ -17,12 +17,10 @@ public class Player {
 	public static final int TYPE_AI3 = 3;
 	public static final int TYPE_NETWORK = 4;
 
-	private boolean color;
 	private int type;
 	private int score;
 
-	public Player(boolean color, int type) {
-		this.color = color;
+	public Player(int type) {
 		this.type = type;
 	}
 

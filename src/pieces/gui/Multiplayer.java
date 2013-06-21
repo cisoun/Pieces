@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import javax.swing.Box;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 
@@ -20,27 +19,21 @@ import pieces.utils.Config;
 
 
 public class Multiplayer extends MenuBar {
-	private Game game;
+	private static final long serialVersionUID = 1L;
 
 	private JLabel lblIP;
 	private JLabel lblPort;
 	private JTextField txtIP;
 	private JTextField txtPort;
-	private JButton btnOK;
-	private JButton btnCreerPartie;
 
 	private Menu menuJoin;
 	private Menu menuCreateGame;
 
-	private int hauteur;
-	private boolean hidden = true;
+	private int height;
+	private boolean toggled = true;
 
 	public Multiplayer(final Game game) {
 		super(true);
-
-		this.game = game;
-
-		//setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 
 		lblIP = new JLabel("Opponent's IP : ");
 		lblPort = new JLabel("Port : ");
@@ -82,7 +75,7 @@ public class Multiplayer extends MenuBar {
 		add(Box.createHorizontalStrut(10));
 		add(menuCreateGame);
 
-		hauteur = getPreferredSize().height;
+		height = getPreferredSize().height;
 		setPreferredSize(new Dimension(getWidth(), 0));
 
 		redraw();
@@ -92,9 +85,9 @@ public class Multiplayer extends MenuBar {
 		Thread animation = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				boolean c = hidden;
+				boolean c = toggled;
 				for (int i = 0; i <= 10; i++) {
-					int y = (int) (Math.abs((c ? 1.0 : 0.0) - (Ease.InOutSine(i, 0, 1, 10))) * hauteur);
+					int y = (int) (Math.abs((c ? 1.0 : 0.0) - (Ease.InOutSine(i, 0, 1, 10))) * height);
 					try {
 						Thread.sleep(20);
 					} catch (InterruptedException e) {
@@ -107,16 +100,16 @@ public class Multiplayer extends MenuBar {
 		});
 		animation.start();
 
-		hidden = !hidden;
+		toggled = !toggled;
 	}
 
-	public boolean isHidden() {
-		return hidden;
+	public boolean isToggled() {
+		return toggled;
 	}
 
 	public void redraw() {
-		Color backgroundColor = Themes.getThemeCourant().getBackground();
-		Color textColor = ColorTools.getLuminosity(Themes.getThemeCourant().getBackground()) < 128 ? Color.WHITE : Color.BLACK;
+		Color backgroundColor = Themes.getCurrentTheme().getBackground();
+		Color textColor = ColorTools.getLuminosity(Themes.getCurrentTheme().getBackground()) < 128 ? Color.WHITE : Color.BLACK;
 
 		setBackground(backgroundColor);
 		setForeground(textColor);
