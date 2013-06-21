@@ -54,6 +54,8 @@ public class Main {
 		/*
 		 * Let's launch the game.
 		 */
+		System.out.println(Game.APP_NAME);
+		System.out.println(Game.APP_VERSION);
 		try {
 			new Game();
 		} catch (RemoteException e) {
